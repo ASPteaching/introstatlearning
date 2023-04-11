@@ -39,10 +39,13 @@ bibliography: scholar.bib
 if(!require("knitr")) install.packages("knitr")
 if(!require("tree")) install.packages("tree")
 if(!require("ISLR")) install.packages("ISLR")
+if(!require("rpart.plot")) install.packages("rpart.plot")
+
 
 require("knitr")
 require("tree")
 require("ISLR")
+require("rpart.plot")
 
 
 ```
@@ -112,6 +115,15 @@ The model can be visualized using a tree:
 plot(model1)
 text(model1, digits = 3, cex=0.8)
 ```
+
+A nicer plot can be obtained using the `rpart.plot` function from the `rpart.plot` package.
+This function allows for multiple tunings, but the default values may already yield a nice informative plot.
+
+```{r}
+rpart.plot(model1, cex=.7)
+detach(package:rpart.plot)
+```
+
 
 If we believed the model was ready for use we could use it to predict diabetes for new subject.
 
@@ -238,13 +250,17 @@ kable(table(mydataset[train,"High"]), caption= "Train data: number of observatio
 We now use the `tree()` function to fit a classification tree in order to predict `High` using all variables but `Sales` using only de train set.
 
 ```{r}
-tree.mydataset=tree(High~.-Sales, mydataset, subset=train, split="deviance")
+tree.mydataset=tree(High~.-Sales, mydataset,
+                    subset=train, split="deviance")
+tree.mydataset2=rpart(High~.-Sales, mydataset,
+                    subset=train)
 ```
 
 The `summary()` function lists the variables that are used as internal nodes in the tree, the number of terminal nodes, and the **training** error rate
 
 ```{r}
 summary(tree.mydataset)
+# summary(tree.mydataset2)
 ```
 
  We can thus define the deviance of a tree (roughly equivalent to the concept of impurity)
@@ -261,8 +277,10 @@ where $n_{mk}$ is the number of observations in the `m`th terminal node that bel
 The next step is display the tree graphically. We use the `plot()` function to display the tree structure, and the `text()`function to display the node labels. 
 
 ```{r fig.DT1, fig.cap="Classification tree", fig.height=10, fig.width=12}
-plot(tree.mydataset)
-text(tree.mydataset,pretty=0)
+# plot(tree.mydataset)
+# require(rpart.plot)
+# rpart.plot(tree.mydataset2)
+# text(tree.mydataset,pretty=0)
 ```
 
 It is also possible to show a `R` print output corresponding to each branch of the tree. 
