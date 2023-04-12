@@ -7,10 +7,9 @@ format:
     html: 
       toc: true
       toc-depth: 3
-      code-fold: true
+      code-fold: false
       fig-width: 8
       fig-height: 6
-      embed-resources: true    
     pdf: default
 knit:
   quarto:
@@ -26,7 +25,7 @@ knit:
       width: 75
 reference-location: margin
 execute:
-    echo: false
+    echo: true
     message: false
     warning: false
 bibliography: scholar.bib
@@ -40,14 +39,6 @@ if(!require("knitr")) install.packages("knitr")
 if(!require("tree")) install.packages("tree")
 if(!require("ISLR")) install.packages("ISLR")
 if(!require("rpart.plot")) install.packages("rpart.plot")
-
-
-require("knitr")
-require("tree")
-require("ISLR")
-require("rpart.plot")
-
-
 ```
 
 
@@ -370,5 +361,177 @@ accrcy <- sum(diag(res)/sum(res))
 The accuracy is **`r accrcy`**.
 
 
+# A regression tree example
+
+This example is borrowed from [@amat2017].
+
+The Boston dataset available in the MASS package contains housing prices for the city of Boston, as well as socioeconomic information for the neighborhood in which they are located.
+
+```{r}
+library(MASS)
+data("Boston")
+datos <- Boston
+head(datos, 3)
+```
+
+
+Our goal is to fit a regression model that allows predicting the average price of a home (medv) based on the available variables.
+
+```{r, fig.align='center'}
+color <- adjustcolor("forestgreen", alpha.f = 0.5)
+ps <- function(x, y, ...) {  # custom panel function
+  panel.smooth(x, y, col = color, col.smooth = "black", 
+               cex = 0.7, lwd = 2)
+}
+pairs(datos[,c(1:6,14)], cex = 0.7, upper.panel = ps, col = color)
+pairs(datos[,c(7:14)], cex = 0.7, upper.panel = ps, col = color)
+
+```
+## Model fitting
+
+Create a train and test sets
+
+```{r}
+set.seed(123)
+train <- sample(1:nrow(datos), size = nrow(datos)/2)
+datos_train <- datos[train,]
+datos_test  <- datos[-train,]
+```
+
+We use the `tree` function of the `tree` package to build the model.
+This function grows the tree until it meets a stop condition. By default, these conditions are:
+
+- `mincut`: minimum number of observations that at least one of the child nodes must have for the division to occur.
+- `minsize`: minimum number of observations a node must have in order for it to be split.
+
+
+```{r}
+set.seed(123)
+arbol_regresion <- tree::tree(
+                    formula = medv ~ .,
+                    data    = datos_train,
+                    split   = "deviance",
+                    mincut  = 20,
+                    minsize = 50
+                  )
+
+summary(arbol_regresion)
+```
+
+The `summary`  shows that the trained tree has a total of 6 terminal nodes and that the variables `rm, lstat, dis` and `tax` have been used as predictors. 
+
+In the context of regression trees, the `Residual mean deviance` term is the residual sum of squares divided by (number of observations - number of terminal nodes). The smaller the deviation, the better the fit of the tree to the training observations.
+
+
+The tree can be visualized:
+```{r}
+par(mar = c(1,1,1,1))
+plot(x = arbol_regresion, type = "proportional")
+text(x = arbol_regresion, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+## Prunning the tree
+
+We use the  `cv.tree` function that uses cross validation to identify the optimal penalty value. By default, this function relies on  the *deviance* to guide the pruning process.
+
+We **grow the tree again** so we have a big tree to prune:
+
+```{r}
+arbol_regresion <- tree::tree(
+                    formula = medv ~ .,
+                    data    = datos_train,
+                    split   = "deviance",
+                    mincut  = 1,
+                    minsize = 2,
+                    mindev  = 0
+                  )
+
+# Optimization
+set.seed(123)
+cv_arbol <- tree::cv.tree(arbol_regresion, K = 5)
+```
+
+The function returns an object `cv_arbol` containing:
+
+- `size`: The size (number of terminal nodes) of each tree.
+- `dev`: The cross-validation test error estimate for each tree size.
+- `k`: The range of penalty values $\alpha$  evaluated.
+- `method`: The criteria used to select the best tree.
+
+These can be used to visualize and understand the optimization performed.
+
+
+```{r}
+size_optimo <- rev(cv_arbol$size)[which.min(rev(cv_arbol$dev))]
+paste("Optimal size obtained is:", size_optimo)
+```
+
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+
+
+resultados_cv <- data.frame(
+                   n_nodes  = cv_arbol$size,
+                   deviance = cv_arbol$dev,
+                   alpha    = cv_arbol$k
+                 )
+
+p1 <- ggplot(data = resultados_cv, aes(x = n_nodes, y = deviance)) +
+      geom_line() + 
+      geom_point() +
+      geom_vline(xintercept = size_optimo, color = "red") +
+      labs(title = "Error vs tree size") +
+      theme_bw() 
+  
+p2 <- ggplot(data = resultados_cv, aes(x = alpha, y = deviance)) +
+      geom_line() + 
+      geom_point() +
+      labs(title = "Error vs penalization (alpha)") +
+      theme_bw() 
+
+ggarrange(p1, p2)
+```
+
+Once the optimal value identified, the final pruning is applied with the `prune.tree` function. This function also accepts the optimal value of $\alpha$ instead of size.
+
+
+```{r}
+arbol_final <- tree::prune.tree(
+                  tree = arbol_regresion,
+                  best = size_optimo
+               )
+
+par(mar = c(1,1,1,1))
+plot(x = arbol_final, type = "proportional")
+text(x = arbol_final, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+## Predicting with the model
+
+We can use both, original and pruned trees to predict the data for the test set.
+
+The quality of the prediction is based in the Root Mean Square.
+
+For the original tree one has:
+
+```{r}
+predicciones <- predict(arbol_regresion, newdata = datos_test)
+test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
+paste("Error de test (rmse) del árbol inicial:", round(test_rmse,2))
+```
+And for the final tree:
+
+```{r}
+predicciones_finales <- predict(arbol_final, newdata = datos_test)
+test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
+paste("Error de test (rmse) del árbol final:", round(test_rmse,2))
+```
+
+
+
 # References
+
+
 
