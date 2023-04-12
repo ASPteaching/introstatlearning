@@ -596,8 +596,20 @@ $$ where $\alpha$ is the parameter that controls the trade-off between tree comp
 
 # Regression Trees
 
--   When the response variable is numeric, decision trees are *regression trees*.
--   Some differences with classification trees:
+## Regression modelling with trees
+
+- When the response variable is numeric, decision trees are *regression trees*.
+
+- Option of choice for distinct reasons
+
+  - The relation between response and potential explanatory variables is not linear.
+  - Perform automatic variable selection.
+  - Easy to interpret, visualize, explain.
+  - Robust to outliers and can handle missing data
+
+## Regression vs classification trees
+
+- Some differences with classification trees:
     - Splitting criteria based on mean squared error or mean absolute error.
     - Leaf node prediction based on  mean/median of the target variable.
     - Evaluation metrics based on measures of the difference between the predicted and actual values.
@@ -611,9 +623,8 @@ in New York from May through September of 1973 (153 days).
   - Solar.R: the solar radiation (in Langleys) ...
   - Wind: the average wind speed (in mph) ...
   - Temp: the maximum daily temperature (ºF) ...
-  - Other less relevant variables (date, ...).
   
-- Main goal : Predict ozone concentration
+- Main goal : Predict ozone concentration.
 
 ## Non linear relationships! {.smaller}
 
@@ -636,6 +647,101 @@ ps <- function(x, y, ...) {  # custom panel function
 pairs(aq, cex = 0.7, upper.panel = ps, col = color)
 
 ```
+
+## Building the tree (1): Splitting
+
+- Consider:
+  - all predictors $X_1, \dots, X_n$, and 
+  - all values of cutpoint $s$ for each predictor and 
+- For each predictor find boxes 
+ $R_1, \ldots, R_J$ that minimize the RSS, given by
+<small>
+$$
+\sum_{j=1}^J \sum_{i \in R_j}\left(y_i-\hat{y}_{R_j}\right)^2
+$$
+</small>
+
+where $\hat{y}_{R_j}$ is the mean response for the training observations within the $j$ th box.
+
+## Building the tree (2): Splitting
+
+- To do this, define the pair of half-planes
+<small>
+$$
+R_1(j, s)=\left\{X \mid X_j<s\right\} \text { and } R_2(j, s)=\left\{X \mid X_j \geq s\right\}
+$$
+</small>
+
+and seek the value of $j$ and $s$ that minimize the equation:
+
+<small>
+$$
+\sum_{i: x_i \in R_1(j, s)}\left(y_i-\hat{y}_{R_1}\right)^2+\sum_{i: x_i \in R_2(j, s)}\left(y_i-\hat{y}_{R_2}\right)^2.
+$$
+</small>
+
+## Building the tree (3): Prediction{.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+- Once the regions have been created we predict the response using the mean of the trainig observations *in the region to which that observation belongs*.
+
+- In the example, for an observation belonging to the shaded region, the prediction would be:
+
+$$
+\hat (y) =\frac{1}{4}(y_2+y_3+y_5+y_9)
+$$
+:::
+
+::: {.column width='60%'}
+
+```{r fig.align='center', out.width="100%"}
+knitr::include_graphics("images/RegressionTree-Prediction1.png")
+```
+:::
+
+::::
+
+## Prunning the tree (1)
+
+- As before, *cost-complexity prunning* can be applied 
+- We consider a sequence of trees indexed by a nonnegative tuning parampter $\alpha$. 
+- For each value of $\alpha$ there corresponds a subtree $T \subset T_0$ such that:
+<small>
+\begin{equation}\label{prunning}
+\sum_{m=1}^{|T|} \sum_{i:}\left(y_i \in R_m-\hat{y}_{R_m}\right)^2+\alpha|T|\quad (*)
+\end{equation}
+</small>
+
+is as small as possible.
+
+## Tuning parameter $\alpha$
+
+-  $\alpha$ controls a trade-off between the subtree’s complexity and its fit to the training data. 
+  - When $\alpha=0$, then the subtree $T$
+will simply equal $T_0$.
+  - As $\alpha$ increases, there is a price to pay for having a tree with many terminal nodes, and so (*) will tend to be minimized for a smaller subtree. 
+  - Equation (*1)  is reminiscent of the lasso.
+- $\alpha$ can be chosen by cross-validation
+.
+
+## Optimizing the tree ($\alpha$){.smaller}
+
+1. Use recursive binary splitting to grow a large tree on the training data, stopping only when each terminal node has fewer than some minimum number of observations.
+
+2. Apply cost complexity pruning to the large tree in order to obtain a sequence of best subtrees, as a function of $\alpha$.
+
+3. Use K-fold cross-validation to choose $\alpha$. That is, divide the training observations into $K$ folds. For each $k=1, \ldots, K$ :
+    1. Repeat Steps 1 and 2 on all but the $k$ th fold of the training data.
+    2. Evaluate the mean squared prediction error on the data in the left-out $k$ th fold, as a function of $\alpha$.
+    
+  Average the results for each value of $\alpha$. Pick $\alpha$ to minimize the average error.
+
+4. Return the subtree from Step 2 that corresponds to the chosen value of $\alpha$.
+
+
 
 
 
