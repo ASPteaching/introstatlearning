@@ -704,6 +704,27 @@ knitr::include_graphics("images/RegressionTree-Prediction1.png")
 
 ::::
 
+## Example: A regression tree  
+
+```{r echo=TRUE}
+set.seed(123)
+train <- sample(1:nrow(aq), size = nrow(aq)*0.7)
+aq_train <- aq[train,]
+aq_test  <- aq[-train,]
+aq_regresion <- tree::tree(formula = Ozone ~ ., 
+                           data = aq_train, split = "deviance")
+summary(aq_regresion)
+```
+
+## Example: Plot the tree
+
+```{r}
+par(mar = c(1,1,1,1))
+plot(x = aq_regresion, type = "proportional")
+text(x = aq_regresion, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+
 ## Prunning the tree (1)
 
 - As before, *cost-complexity prunning* can be applied 
@@ -741,8 +762,19 @@ will simply equal $T_0$.
 
 4. Return the subtree from Step 2 that corresponds to the chosen value of $\alpha$.
 
+## Example: Prune the tree
 
+```{r echo=TRUE, warning=TRUE}
+cv_aq <- tree::cv.tree(aq_regresion, K = 5)
+optimal_size <-  rev(cv_aq$size)[which.min(rev(cv_aq$dev))]
+aq_final_tree <- tree::prune.tree(
+                 tree = aq_regresion,
+                 best = optimal_size
+               )
+summary(aq_final_tree)
+```
 
+In this example pruning does not improve the tree.
 
 
 # References and Resources

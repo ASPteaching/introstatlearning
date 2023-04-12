@@ -414,7 +414,6 @@ arbol_regresion <- tree::tree(
                     mincut  = 20,
                     minsize = 50
                   )
-
 summary(arbol_regresion)
 ```
 
