@@ -2,6 +2,10 @@
 
 /materials/
 
+# Solucions dels exercicis proposats a classe
+
+/labs/solucions/
+
 # History files
 .Rhistory
 .Rapp.history

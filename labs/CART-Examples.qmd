@@ -1,0 +1,553 @@
+---
+title: "Decision Trees Lab 1"
+authors:
+- Adapted by EVL, FRC and ASP
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 3
+      code-fold: false
+      fig-width: 8
+      fig-height: 6
+    pdf: default
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+reference-location: margin
+execute:
+    echo: true
+    message: false
+    warning: false
+bibliography: "../StatisticalLearning.bib"
+---
+
+
+```{r packages, include=FALSE}
+# If the package is not installed then it will be installed
+
+if(!require("knitr")) install.packages("knitr")
+if(!require("tree")) install.packages("tree")
+if(!require("ISLR")) install.packages("ISLR")
+if(!require("rpart.plot")) install.packages("rpart.plot")
+```
+
+
+```{r assignments}
+# This chunk is used to do the assignment of values to R variables
+# This code must be adapted to any change of datasets or 
+
+myDescription <- "The data are a simulated data set containing sales of child car seats at different stores [@james2013introduction]"
+mydataset <- Carseats
+```
+
+
+```{r, dataDescription}
+n <- nrow(mydataset)
+p <- ncol(mydataset)
+```
+
+# Introductory example
+
+## The Pima Indians dataset
+
+The Pima Indian Diabetes data set (`PimaIndiansDiabetes2`) is available in the `mlbench` package.
+
+The data contains 768 individuals (female) and 9 clinical variables for predicting the probability of individuals in being diabete-positive or negative:
+
+- pregnant: number of times pregnant
+- glucose: plasma glucose concentration
+- pressure: diastolic blood pressure (mm Hg)
+- triceps: triceps skin fold thickness (mm)
+- insulin: 2-Hour serum insulin (mu U/ml)
+- mass: body mass index (weight in kg/(height in m)^2)
+- pedigree: diabetes pedigree function
+- age: age (years)
+- diabetes: class variable
+
+A typical classification/prediction problem is to build a model that can distinguish and predict diabetes using some or all the variables in the dataset.
+
+A quick exploration can be done wirh the `swirl` package:
+
+```{r}
+library(skimr)
+data("PimaIndiansDiabetes2", package = "mlbench")
+skim(PimaIndiansDiabetes2)
+```
+
+## Building a classification tree with `rpart``
+
+Start building a simple tree with default parameters
+
+```{r}
+library(rpart)
+model1 <- rpart(diabetes ~., data = PimaIndiansDiabetes2)
+# par(xpd = NA) # otherwise on some devices the text is clipped
+```
+
+This builds a model consisting of a series of nested decision rules.
+
+```{r}
+print(model1)
+```
+
+The model can be visualized using a tree:
+
+```{r}
+plot(model1)
+text(model1, digits = 3, cex=0.8)
+```
+
+A nicer plot can be obtained using the `rpart.plot` function from the `rpart.plot` package.
+This function allows for multiple tunings, but the default values may already yield a nice informative plot.
+
+```{r}
+rpart.plot(model1, cex=.7)
+detach(package:rpart.plot)
+```
+
+
+If we believed the model was ready for use we could use it to predict diabetes for new subject.
+
+
+**Imagine we kow nothing about overfitting**. We may want to check the accuracy of the model on the dataset we have used to build it.
+
+```{r}
+predicted.classes<- predict(model1, PimaIndiansDiabetes2, "class")
+mean(predicted.classes == PimaIndiansDiabetes2$diabetes)
+```
+
+A better strategy is to use train dataset to build the model and a test dataset to check how it works.
+
+```{r}
+set.seed(123)
+ssize <- nrow(PimaIndiansDiabetes2)
+propTrain <- 0.8
+training.indices <-sample(1:ssize, floor(ssize*propTrain))
+train.data  <- PimaIndiansDiabetes2[training.indices, ]
+test.data <- PimaIndiansDiabetes2[-training.indices, ]
+```
+
+Now we build the model on the train data and check its accuracy on the test data.
+
+```{r}
+model2 <- rpart(diabetes ~., data = train.data)
+predicted.classes.test<- predict(model2, test.data, "class")
+mean(predicted.classes.test == test.data$diabetes)
+```
+
+The accuracy is good, but smaller, as expected.
+
+
+
+
+# A classification tree
+
+## Data description
+
+***
+
+_In this section,  you should provide a short explanation about problem and the data set._
+
+***
+
+
+`r myDescription`. 
+
+The data set has **`r n`** observations on **`r p`** variables. The variable names are: *`r toString(names(mydataset))`*.
+
+We start categorizing the variable `Sales` creating a new variable,  `High`, which takes on a value of `Yes` if the `Sales`  variable exceeds 8, and  a value of `No` otherwise.
+
+```{r}
+# as.factor() changes the type of variable to factor
+mydataset$High=as.factor(ifelse(mydataset$Sales<=8,"No","Yes"))
+```
+
+The number of observations for each class is:
+
+
+```{r}
+kable(table(mydataset$High), caption= "Number of observations for each class", col.names = c('High','Freq'))
+```
+
+The aim is of this study is to predict the categorical values of sales (`High`) using all variables but `Sales`. 
+
+It is a classification problem and we will build a *classification tree model*.
+
+### Data summarization
+
+This is a short  data set summary
+
+```{r}
+summary(mydataset)
+```
+
+An improved description:
+
+```{r}
+skimr::skim(mydataset)
+```
+
+## Preprocess
+
+***
+
+_It is very common that the data need to be preprocessed before training the model_
+
+***
+
+In this case, no cleaning or preprocessing are required. 
+
+
+## Train/Test partition of data
+
+In order to properly evaluate the performance of a model, we must estimate the error rather than simply computing the training error. 
+
+We 
+
+1. split the observations into a training set and a test set, 
+2. build the model using the training set, and 
+3. evaluate its performance on the test data.
+
+
+```{r, dataPartition}
+set.seed(2)
+pt <- 1/2
+train <- sample(1:nrow(mydataset),pt*nrow(mydataset))
+mydataset.test <- mydataset[-train,]
+High.test <-  mydataset[-train,"High"]
+```
+
+The train and tets set have `r length(train)` `r nrow(mydataset) - length(train)` observations respectively.
+
+In train data, the number of observations for each class is:
+
+```{r}
+kable(table(mydataset[train,"High"]), caption= "Train data: number of observations for each class",
+      col.names = c('High','Freq'))
+```
+
+## Train model 
+
+We now use the `tree()` function to fit a classification tree in order to predict `High` using all variables but `Sales` using only de train set.
+
+```{r}
+tree.mydataset=tree(High~.-Sales, mydataset,
+                    subset=train, split="deviance")
+tree.mydataset2=rpart(High~.-Sales, mydataset,
+                    subset=train)
+```
+
+The `summary()` function lists the variables that are used as internal nodes in the tree, the number of terminal nodes, and the **training** error rate
+
+```{r}
+summary(tree.mydataset)
+# summary(tree.mydataset2)
+```
+
+ We can thus define the deviance of a tree (roughly equivalent to the concept of impurity)
+ as the sum over all leaves of:
+
+$$
+-2 \sum_m \sum_k n_{mk} log(\hat{p}_{mk}),
+$$
+
+where $n_{mk}$ is the number of observations in the `m`th terminal node that belong to the `k`th class. The *residual mean deviance* reported is simply the deviance divided by $n - |T_0|$ where $T_0$ is the number of terminal nodes. 
+
+## Plot the Tree
+
+The next step is display the tree graphically. We use the `plot()` function to display the tree structure, and the `text()`function to display the node labels. 
+
+```{r fig.DT1, fig.cap="Classification tree", fig.height=10, fig.width=12}
+# plot(tree.mydataset)
+# require(rpart.plot)
+# rpart.plot(tree.mydataset2)
+# text(tree.mydataset,pretty=0)
+```
+
+It is also possible to show a `R` print output corresponding to each branch of the tree. 
+
+```{r}
+tree.mydataset
+```
+
+
+## Prediction
+
+We now evaluate the performance of the classification tree on the test data. The `predict()` function can be used for this purpose.
+
+
+```{r}
+tree.pred=predict(tree.mydataset,mydataset.test,type="class")
+res <- table(tree.pred,High.test)
+res
+accrcy <- sum(diag(res)/sum(res))
+```
+
+
+The accuracy is **`r accrcy`** or misclassification error rate is **`r 1-accrcy`**.
+
+
+
+## Prune the tree (Tunning model)
+
+We consider whether pruning the tree could lead to improved results. 
+
+```{r}
+set.seed(3)
+cv.mydataset=cv.tree(tree.mydataset,FUN=prune.misclass)
+names(cv.mydataset)
+cv.mydataset
+```
+
+
+Note that, despite the name, `dev` corresponds to the cross-validation error rate in this instance. 
+
+We plot the error rate as a function of both `size`and `k`.
+
+```{r}
+par(mfrow=c(1,2))
+plot(cv.mydataset$size,cv.mydataset$dev,type="b")
+plot(cv.mydataset$k,cv.mydataset$dev,type="b")
+par(mfrow=c(1,1))
+```
+
+We now apply the `prune.misclass()` function in order to prune the tree to obtain a "best tree". The best tree is the tree with ...
+
+```{r fig.DT2, fig.cap="The best classification pruned tree", fig.height=10, fig.width=12}
+prune.mydataset=prune.misclass(tree.mydataset,
+                               best=cv.mydataset$size[which.min(cv.mydataset$dev)])
+plot(prune.mydataset)
+text(prune.mydataset,pretty=0)
+
+```
+
+How well does this pruned tree perform on the test data set?
+
+```{r}
+tree.pred=predict(prune.mydataset,mydataset.test,type="class")
+res <- table(tree.pred,High.test)
+res
+accrcy <- sum(diag(res)/sum(res))
+```
+
+The accuracy is **`r accrcy`**.
+
+If we increase the value of `best`, for example `r  cv.mydataset$size[1]` terminal nodes, we obtain a larger pruned tree with lower classification accuracy:
+
+```{r fig.DT3, fig.cap="Other classification pruned tree", fig.height=10, fig.width=12}
+prune.mydataset=prune.misclass(tree.mydataset, 
+                               best = cv.mydataset$size[1])
+plot(prune.mydataset)
+text(prune.mydataset, pretty=0)
+```
+
+```{r}
+tree.pred=predict(prune.mydataset, mydataset.test, type="class")
+res <- table(tree.pred, High.test)
+res
+accrcy <- sum(diag(res)/sum(res))
+```
+
+The accuracy is **`r accrcy`**.
+
+
+# A regression tree example
+
+This example is borrowed from [@amat2017].
+
+The Boston dataset available in the MASS package contains housing prices for the city of Boston, as well as socioeconomic information for the neighborhood in which they are located.
+
+```{r}
+library(MASS)
+data("Boston")
+datos <- Boston
+head(datos, 3)
+```
+
+
+Our goal is to fit a regression model that allows predicting the average price of a home (medv) based on the available variables.
+
+```{r, fig.align='center'}
+color <- adjustcolor("forestgreen", alpha.f = 0.5)
+ps <- function(x, y, ...) {  # custom panel function
+  panel.smooth(x, y, col = color, col.smooth = "black", 
+               cex = 0.7, lwd = 2)
+}
+pairs(datos[,c(1:6,14)], cex = 0.7, upper.panel = ps, col = color)
+pairs(datos[,c(7:14)], cex = 0.7, upper.panel = ps, col = color)
+
+```
+## Model fitting
+
+Create a train and test sets
+
+```{r}
+set.seed(123)
+train <- sample(1:nrow(datos), size = nrow(datos)/2)
+datos_train <- datos[train,]
+datos_test  <- datos[-train,]
+```
+
+We use the `tree` function of the `tree` package to build the model.
+This function grows the tree until it meets a stop condition. By default, these conditions are:
+
+- `mincut`: minimum number of observations that at least one of the child nodes must have for the division to occur.
+- `minsize`: minimum number of observations a node must have in order for it to be split.
+
+
+```{r}
+set.seed(123)
+arbol_regresion <- tree::tree(
+                    formula = medv ~ .,
+                    data    = datos_train,
+                    split   = "deviance",
+                    mincut  = 20,
+                    minsize = 50
+                  )
+summary(arbol_regresion)
+```
+
+The `summary`  shows that the trained tree has a total of 6 terminal nodes and that the variables `rm, lstat, dis` and `tax` have been used as predictors. 
+
+In the context of regression trees, the `Residual mean deviance` term is the residual sum of squares divided by (number of observations - number of terminal nodes). The smaller the deviation, the better the fit of the tree to the training observations.
+
+
+The tree can be visualized:
+```{r}
+par(mar = c(1,1,1,1))
+plot(x = arbol_regresion, type = "proportional")
+text(x = arbol_regresion, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+## Prunning the tree
+
+We use the  `cv.tree` function that uses cross validation to identify the optimal penalty value. By default, this function relies on  the *deviance* to guide the pruning process.
+
+We **grow the tree again** so we have a big tree to prune:
+
+```{r}
+arbol_regresion <- tree::tree(
+                    formula = medv ~ .,
+                    data    = datos_train,
+                    split   = "deviance",
+                    mincut  = 1,
+                    minsize = 2,
+                    mindev  = 0
+                  )
+
+# Optimization
+set.seed(123)
+cv_arbol <- tree::cv.tree(arbol_regresion, K = 5)
+```
+
+The function returns an object `cv_arbol` containing:
+
+- `size`: The size (number of terminal nodes) of each tree.
+- `dev`: The cross-validation test error estimate for each tree size.
+- `k`: The range of penalty values $\alpha$  evaluated.
+- `method`: The criteria used to select the best tree.
+
+These can be used to visualize and understand the optimization performed.
+
+
+```{r}
+size_optimo <- rev(cv_arbol$size)[which.min(rev(cv_arbol$dev))]
+paste("Optimal size obtained is:", size_optimo)
+```
+
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+
+
+resultados_cv <- data.frame(
+                   n_nodes  = cv_arbol$size,
+                   deviance = cv_arbol$dev,
+                   alpha    = cv_arbol$k
+                 )
+
+p1 <- ggplot(data = resultados_cv, aes(x = n_nodes, y = deviance)) +
+      geom_line() + 
+      geom_point() +
+      geom_vline(xintercept = size_optimo, color = "red") +
+      labs(title = "Error vs tree size") +
+      theme_bw() 
+  
+p2 <- ggplot(data = resultados_cv, aes(x = alpha, y = deviance)) +
+      geom_line() + 
+      geom_point() +
+      labs(title = "Error vs penalization (alpha)") +
+      theme_bw() 
+
+ggarrange(p1, p2)
+```
+
+Once the optimal value identified, the final pruning is applied with the `prune.tree` function. This function also accepts the optimal value of $\alpha$ instead of size.
+
+
+```{r}
+arbol_final <- tree::prune.tree(
+                  tree = arbol_regresion,
+                  best = size_optimo
+               )
+
+par(mar = c(1,1,1,1))
+plot(x = arbol_final, type = "proportional")
+text(x = arbol_final, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+## Predicting with the model
+
+We can use both, original and pruned trees to predict the data for the test set.
+
+The quality of the prediction is based in the Root Mean Square.
+
+For the original tree one has:
+
+```{r}
+predicciones <- predict(arbol_regresion, newdata = datos_test)
+test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
+paste("Error de test (rmse) del árbol inicial:", round(test_rmse,2))
+```
+And for the final tree:
+
+```{r}
+predicciones_finales <- predict(arbol_final, newdata = datos_test)
+test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
+paste("Error de test (rmse) del árbol final:", round(test_rmse,2))
+```
+
+# Exercises
+
+This problem involves the $O J$ data set which is part of the ISLR2 package.
+
+(a) Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations.
+(b) Fit a tree to the training data, with Purchase as the response and the other variables as predictors. Use the summary () function to produce summary statistics about the tree, and describe the results obtained. What is the training error rate? How many terminal nodes does the tree have?
+(c) Type in the name of the tree object in order to get a detailed text output. Pick one of the terminal nodes, and interpret the information displayed.
+(d) Create a plot of the tree, and interpret the results.
+(e) Predict the response on the test data, and produce a confusion matrix comparing the test labels to the predicted test labels. What is the test error rate?
+(f) Apply the cv.tree() function to the training set in order to determine the optimal tree size.
+(g) Produce a plot with tree size on the $x$-axis and cross-validated classification error rate on the $y$-axis.
+(h) Which tree size corresponds to the lowest cross-validated classification error rate?
+(i) Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation. If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes.
+(j) Compare the training error rates between the pruned and unpruned trees. Which is higher?
+(k) Compare the test error rates between the pruned and unpruned trees. Which is higher?
+
+
+Once you have solved the exercise, try to repeat it using another R package, either `rpàrt` or `caret`. Compare the results obtained and comment about the differences observed.
+
+# References
+
+
+
