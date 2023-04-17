@@ -328,6 +328,12 @@ Since each out-of-bag set is not used to train the model, it can be used to eval
 <!-- - This a variable number (around B/3) of predictions for the ith observation which can be averaged. -->
 <!-- - If $B$ is large this is essentially the LOO cross-validation error. -->
 
+## Illustration of OOB EE
+
+```{r, fig.align='center', out.width="100%"}
+knitr::include_graphics("images/oobErrorEstimation.png")
+```
+[Source: https://www.baeldung.com/cs/random-forests-out-of-bag-error](https://www.baeldung.com/cs/random-forests-out-of-bag-error)
 
 
 ## Bagging in R (1.1)
