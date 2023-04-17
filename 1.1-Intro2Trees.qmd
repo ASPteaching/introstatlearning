@@ -131,10 +131,10 @@ knitr::include_graphics("images/decTree4Hypertension.png")
 
 -   Two main types: Classification and Regression Trees (CART).
 
-    -   **Classification Trees** are built when the response variable is categorical.
-        -   They aim to *classify a new observation* based on the values of the predictor variables.
-    -   **Regression Trees** are used when the response variable is numerical.
-        -   They aim to *predict the value* of a continuous response variable based on the values of the predictor variables.
+  - **Classification Trees** are built when the response variable is categorical.
+    -   They aim to *classify a new observation* based on the values of the predictor variables.
+  -   **Regression Trees** are used when the response variable is numerical.
+    -   They aim to *predict the value* of a continuous response variable based on the values of the predictor variables.
 
 ## Classification vs Regression Trees {.smaller}
 
@@ -775,6 +775,24 @@ summary(aq_final_tree)
 ```
 
 In this example pruning does not improve the tree.
+
+# Advantages and disadvantages of trees
+
+## Trees have many advantages
+
+- Trees are very easy to explain to people. 
+
+- Decision trees may be seen as good mirrors of human decision-making.
+
+- Trees can be displayed graphically, and are easily interpreted even by a non-expert.
+
+- Trees can easily handle qualitative predictors without the need to create dummy variables.
+
+## But they come at a price
+
+- Trees generally do not have the same level of predictive accuracy as sorne of the other regression and classification approaches.
+
+-  Additionally, trees can be very non-robust: a small change in the data can cause a large change in the final estimated tree.
 
 
 # References and Resources

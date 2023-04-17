@@ -1,0 +1,380 @@
+---
+title: "Ensemble Methods"
+#subtitle: 'Improving predictors by aggregation'
+author: "A. Sanchez, F. Reverter and E. Vegas"
+format:
+  revealjs: 
+    incremental: false  
+    transition: slide
+    background-transition: fade
+    transition-speed: slow
+    scrollable: true
+    menu:
+      side: left
+      width: half
+      numbers: true
+    slide-number: c/t
+    show-slide-number: all
+    progress: true
+    css: "css4CU.css"
+    theme: sky
+    self-contained: true
+    self-contained-math: true
+#    suppress-bibliography: true
+bibliography: "StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction to Ensembles
+
+## Some problems of *weak* learners.
+
+- Decision trees have many good properties but some important drawbacks:
+  - Smaller accuracy than competing alternatives
+  - Very sensitive to small changes in data
+  - Overall it makes the highly variable predictors
+- Tree are not the only classifers to suffer from such problems.
+
+
+## Ensembles
+
+- A common strategy to deal with these issues is to build repeated (weak learners) models on the same data and combine them to form a single result.
+
+- These are called *ensemble* or consensus estimators/predictors.
+
+- As a general rule, ensemble learners tend to improve the results obtained with the weak learners they are made of.
+
+
+## Ensemble methods
+
+- Ensemble can be built on different learners but we will focus on those built on trees:
+
+  - Bagging, 
+  - Random Forests, 
+  - Boosting, 
+  - Bayesian Trees.
+  
+# Bagging: Aggregating predictors
+
+## Bagging: bootstrap aggregation
+
+- Decision trees suffer from high variance when compared with other methods such as linear regression, especially when $n/p$ is moderately large.
+  - *NOTE: Write a small script to check this assertion*
+  
+- Given that high variance is intrinsec to the trees a possibility, suggested by Breimann [@Breiman1996], is to build multiple trees derived from the same dataset and, somehow, average them.
+
+## Averaging decreases variance
+
+- Bagging relies, informally, on the idea that:
+  - given $X\sim F()$, s.t. $Var_F(X)=\sigma^2$, 
+  - given a s.r.s. $X_1, ..., X_n$ from $F$ then 
+  - if $\overline{X}=\frac{1}{N}\sum_{i=1}^n X_i$ then $var_F(\overline{X})=\sigma^2/n$.
+  
+- That is, *relying on the sample mean instead of on simple observations decreases variance by a factor of $n$*.
+
+## Averaging trees ...
+
+Two questions arise here:
+
+1. How to go from $X$ to $X_1, ..., X_n$?
+  - This will be done using *bootstrap resampling*.
+
+2. What means "averaging" in this context.
+  - Depending on the type of tree:
+    - Average predictions for regression trees.
+    - Majority voting for classification trees.
+
+## The bootstrap
+
+- *Bootstrap* methods were introduced by Bradley Efron in 1979 [@Efron79] to estimate the standard error of a statistic.
+- The success of the idea lied in that the procedure was presented as ``automatic'', that is:
+  - instead of having to do complex calculations,
+  - it allowed to approximate them using computer simulation.
+
+- Some people  called it ``the end of mathematical statistics''.
+
+## Bootstrap Applications 
+
+- The bootstrap has been applied to almost any problem in Statistics.
+
+  - Computing standard errors,
+  - Bias estimation and adjustment,
+  - Confidence intervals,
+  - Significance tests, ...
+
+- We begin with the easiest and best known case: *estimating the standard error (that is the square root of the variance) of an estimator*.
+
+## Precision of an estimate (1)
+
+- Assume we want to estimate some parameter $\theta$,
+that can be expressed as $\theta (F)$, where $F$ is the distribution function of each
+$X_i$ in $(X_1,X_2,...,X_n)$. 
+- For example:
+
+:::{.font90}
+\begin{eqnarray*}
+\theta &=& E_F(X)=\theta (F) \\
+\theta &=& Med(X)=\{m:P_F(X\leq m)=1/2\}=
+\theta (F).
+\end{eqnarray*}
+:::
+
+## Plug-in estimates
+
+-  To estimate $\theta(F)$ we usually rely on *plug-in estimators*: $\hat{\theta}=\theta (F_n)$:
+
+:::{.font90}
+\begin{eqnarray*}
+\hat{\theta}&=&\overline{X}=\int XdF_n(x)=\frac
+1n\sum_{i=1}^nx_i=\theta (F_n)
+\\
+\hat{\theta}&=&\widehat{Med}(X)=\{m:\frac{\#x_i\leq m}n=1/2\}=\theta
+(F_n)
+\end{eqnarray*}
+:::
+
+## Precision of an estimate (1)
+
+- An important when computing an estimator $\hat \theta$ of a parameter $\theta$ is *how precise is $\hat \theta$ as an estimator of $\theta$*?
+
+  - With the sample mean, $\overline{X}$, the standard error estimation is immediate because the expression of the variance estimator is known: 
+$
+\sigma _{\overline{X}}=\frac{\sigma (X)}{\sqrt{n}}
+$
+  - So, a natural estimator of the standard error of $\overline{X}$ is: $\hat\sigma_\overline{X}=\frac{\hat{\sigma}(X)}{\sqrt{n}}$
+
+## Precision of an estimate (2) {.smaller}
+
+-  If, as in this case, the variance of $X$ (and, here, that of $\overline{X}$) is a functional of $F$:
+
+:::{.font90}
+$$
+\sigma _{\overline{X}}=\frac{\sigma (X)}{\sqrt{n}}=\frac{\sqrt{\int
+[x-\int x\,dF(x)]\sp 2dF(x)}}{\sqrt{n}}=\sigma _{\overline{X}}(F)
+$$
+:::
+
+then, the standard error estimator is the same functional applied on $F_n$, that is:
+
+:::{.font90}
+$$
+\hat{\sigma}_{\overline{X}}=\frac{\hat{\sigma}(X)}{\sqrt{n}}=\frac{\sqrt{1/n\sum_{i=1}^n(x_i-\overline{x})^2}}{\sqrt{n}}=\sigma
+_{\overline{X}}(F_n).
+$$
+:::
+
+## Standard error estimation
+
+- Thus, a way to obtain a standard error estimator $\widehat{\sigma}_{\widehat{\theta}}$  of an estimator $\widehat{\theta}$ consists on replacing  $F$ with $F_n$ in the ``population'' standard error expression  of $\hat \theta$, $\displaystyle{\sigma_{\hat
+\theta}= \sigma_{\hat \theta}(F)}$, **whenever it is known**.
+- In a schematic form:
+$$
+\sigma_{\hat \theta}= \sigma_{\hat \theta}(F) \Longrightarrow
+\sigma_{\hat \theta}(F_n)= \widehat{\sigma}_{\hat \theta}.
+$$
+That is, *the process consists of "plugging-in" $F_n$ in the (known) functional form, $\sigma_{\hat \theta}(F)$ that defines $\sigma_{\hat \theta}$}*.
+
+## The bootstrap (1)
+
+- The previous approach, $F\simeq F_n \Longrightarrow \sigma_{\hat \theta}(F) \simeq \sigma_{\hat \theta}(F_n)$ 
+presents the obvious drawback that, when the functional form $\sigma _{\hat{\theta}}(F)$ is
+ unknown, it is not possible to carry out the substitution of $F$ by $F_n$.
+- This is, for example, the case of standard error of the median or [that of the correlation coefficient](http://artent.net/2012/07/31/standard-deviation-of-sample-median/).
+
+
+## The bootstrap (2)
+
+- The  *bootstrap* method makes it possible to do the desired approximation:
+$$\hat{\sigma}_{\hat\theta} \simeq \sigma _{\hat\theta}(F_n)$$
+*without having to to know the form of* $\sigma_{\hat\theta}(F)$.
+
+- To do this,*the bootstrap estimates, or directly approaches* $\sigma_{\hat{\theta}}(F_n)$ *over the sample*.
+
+
+## Bootstrap sampling (*resampling*)
+
+- The *bootstrap* allows to estimate the standard error from samples of  $F_n$, that is: 
+- *substitution of $F_n$ by $F$ is carried out in the sampling step*.
+%(instead of doing it when calculating $\sigma_{\hat{\theta}}(F)$)}.
+
+- Instead of doing:
+
+:::{.font80}
+$$F\stackrel{s.r.s}{\longrightarrow }{\bf X} = 
+(X_1,X_2,\dots, X_n) \, \quad (\hat \sigma_{\hat\theta} =\underbrace{\sigma_\theta(F_n)}_{unknown})
+$$
+:::
+
+- what one does is:
+
+:::{.font80}
+$$
+F_n\stackrel{s.r.s}{\longrightarrow }\quad {\bf X^{*}}=(X_1^{*},X_2^{*},
+\dots ,X_n^{*}) \quad (\hat \sigma_{\hat\theta}= \hat \sigma_{\hat \theta}^* \simeq \sigma_{\hat \theta}^*).
+$$
+:::
+
+
+## Bootstrap resampling (2)
+
+- Here,   $\sigma_{\hat \theta}^*$ is the bootstrap standard error of $\hat \theta$ and 
+- $\hat \sigma_{\hat \theta}^*$ the bootstrap estimate of the standard error of $\hat \theta$.
+
+- This means that the sampling process consists of *extracting samples of size $n$ of $F_n$* , that is:
+  - ${\bf X^{*}}=(X_1^{*},X_2^{*},\dots ,X_n^{*})$ is a random sample of size $n$ obtained *with replacement* from the original sample $(X_1,X_2,\dots ,X_n)$.
+
+- The samples ${\bf X^*}$, obtained through this procedure are called *bootstrap*\ samples or *re-samples*.
+
+
+## Bootstrap standard errors
+
+
+- The *bootstrap*\ distribution is usually not known.
+- Computing the standard error from resamples is then done by means of a *Monte Carlo algorithm*
+
+:::{.font80}
+1.  Draw a bootstrap sample, ${\bf x}_1^{*}$ from $F_n$ and compute $\hat{\theta}({\bf x}_1^{*})$.
+2.  Repeat $B$ times yielding $\hat{\theta}({\bf x}_2^{*})$, $\dots$, $\hat{\theta}({\bf x}_B^{*})$ estimates.
+3. Compute:
+\begin{equation*}
+\hat{\sigma}_B (\hat\theta)= \sqrt{
+	\frac{
+		\sum_{b=1}^B\left( \hat{\theta}(%
+		{\bf x^{*}_i})-\overline{\hat{\theta}}\right) ^2
+		}{
+		(B-1)	
+		}
+	}, \quad \overline{\hat{\theta}}\equiv \frac 1B\sum_{b=1}^B\hat{\theta}\left( {\bf x}%
+_b^{*}\right)
+\end{equation*}
+:::
+
+
+## Bootstrap Algorithm 
+
+- Main idea is that the  *bootstrap* standard error of $\hat\theta$, $\sigma_B(\hat\theta)$ can be *approximated* by $\hat{\sigma}_B (\hat\theta)$.
+
+:::{.font90} 
+$$
+\mbox{if }B\rightarrow\infty \mbox{ then } \hat{\sigma}_B (\hat\theta) \rightarrow \hat\sigma_{\infty} (\hat\theta) =\sigma_B(\hat\theta)=\sigma_{\hat\theta}(F_n).
+$$
+:::
+
+The bootstrap approximation, $\hat{\sigma}_B(\hat\theta)$, to the bootstrap SE, $\sigma_B(\hat\theta)$,  provides an estimate of $\sigma_{\hat\theta}(F_n)$:
+
+$$
+\hat{\sigma}_B(\hat\theta)(\simeq \sigma_B(\hat\theta)=\sigma_{\hat\theta}(F_n))\simeq\hat \sigma_{\hat\theta}(F_n).
+$$
+
+
+## Summary
+
+From real world to  *bootstrap* world:
+
+```{r, fig.align='center', out.width="100%"}
+knitr::include_graphics("images/fromRealWorld2BootstrapWorld.png")
+```
+
+## Back to bagging
+
+- Breiman [@Breiman1996] combined the ideas of:
+  - Averaging provides decreased variance estimates,
+  - Bootstrap provides multiple (re)samples.
+- He suggested: **b**ootstrap **agg**regat**ing** :
+  - Take resamples  from the original training dataset
+  - Learn the model on each bootstrapped training set to get a prediction $\hat f^{*b}(x)$.
+  - Use the boostrap estimates to obtain improved prediction/classification.
+
+
+## Bagging prediction/classifier
+
+- For regression (trees) the **bagged estimate** is the average prediction at $x$ from these $B$ trees.
+
+:::{.font90}
+$$\hat f_{bag}(x)=\frac 1B \sum_{b=1}^B \hat f^{*b}(x) $$
+:::
+
+- For classification (trees) the 
+**bagged classifier** selects the class with the most “votes” from the $B$ trees:
+
+:::{.font90}
+$$
+\hat G_{bag}(x) = \arg \max_k \hat f_{bag}(x).
+$$
+:::
+
+## Out-Of-Bag observations
+
+- Every time a resample is taken *with replacement*, some observations are ommitted, due to the multiple occurring of others.
+
+
+```{r, fig.align='center', out.width="100%"}
+knitr::include_graphics("images/oobErrorEstimation.jpg")
+```
+
+- These *out-of-bag* (OOB) observations can be used to build an estimate of prediction error.
+
+
+## Out-Of-Bag error estimates
+
+Since each out-of-bag set is not used to train the model, it can be used to evaluate performance.
+
+1. Find all trees that are not trained by the OOB instance.
+2. Take the majority vote of these trees for the OOB instance, compared to the true value of the OOB instance.
+3. Compile OOB error for all instances in the OOB dataset.
+
+<!-- - For every observation $i=1, ...n$ response can be predicted using each of the trees in which that observation was OOB.  -->
+<!-- - This a variable number (around B/3) of predictions for the ith observation which can be averaged. -->
+<!-- - If $B$ is large this is essentially the LOO cross-validation error. -->
+
+
+
+## Bagging in R (1.1)
+
+- This exampe relies on the well-known `AmesHousing` dataset on house prices in Ames, IA.
+
+- We use libraries:
+  - `rpart` for stratified resampling
+  - `ipred` for bagging.
+
+```{r eval=FALSE, echo=TRUE}
+# Prepare "clean" dataset from raw data
+ames <- AmesHousing::make_ames()
+
+# Split in test/training
+set.seed(123)
+split <- rsample::initial_split(ames, prop = 0.7, 
+                       strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
+```
+
+## Bagging in R (1.2)
+
+
+```{r eval=FALSE, echo=TRUE}
+system.time()
+ames_bag1 <- ipred::bagging(
+  formula = Sale_Price ~ .,
+  data = ames_train,
+  nbagg = 100,  coob = TRUE,
+  control = rpart.control(minsplit = 2, cp = 0)
+))
+```
+
+
+```{r eval=FALSE, echo=TRUE}
+show(ames_bag1)
+# Bagging regression trees with 100 bootstrap replications 
+# Call: bagging.data.frame(formula = Sale_Price ~ ., data = ames_train, 
+#    nbagg = 100, coob = TRUE, control = rpart.control(minsplit = 2, 
+#        cp = 0))
+
+# Out-of-bag estimate of root mean squared error:  26350.91 
+
+```
+
+
+
+## References
