@@ -5,6 +5,14 @@
   text-align: center;
 }
 
+.math.inline .MathJax  {
+  font-size: 80% !important;
+}
+
+.math.display .MathJax  {
+  font-size: 100% !important;
+}
+
 /*FONTS*/
 
 @import url(https://fonts.googleapis.com/css?family=Fira+Sans);

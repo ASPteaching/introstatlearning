@@ -26,6 +26,7 @@ editor_options:
   chunk_output_type: console
 ---
 
+
 # Introduction to Ensembles
 
 ## Some problems of *weak* learners.
@@ -194,64 +195,71 @@ $$\hat{\sigma}_{\hat\theta} \simeq \sigma _{\hat\theta}(F_n)$$
 
 ## Bootstrap sampling (*resampling*)
 
-- The *bootstrap* allows to estimate the standard error from samples of  $F_n$, that is: 
-- *substitution of $F_n$ by $F$ is carried out in the sampling step*.
-%(instead of doing it when calculating $\sigma_{\hat{\theta}}(F)$)}.
+- The *bootstrap* allows to estimate the standard error from samples of  $F_n$, that is, 
 
-- Instead of doing:
+- Substituting $F_n$ by $F$ carried out in the *sampling step*.
 
 :::{.font80}
-$$F\stackrel{s.r.s}{\longrightarrow }{\bf X} = 
-(X_1,X_2,\dots, X_n) \, \quad (\hat \sigma_{\hat\theta} =\underbrace{\sigma_\theta(F_n)}_{unknown})
-$$
-:::
 
-- what one does is:
-
-:::{.font80}
-$$
-F_n\stackrel{s.r.s}{\longrightarrow }\quad {\bf X^{*}}=(X_1^{*},X_2^{*},
+\begin{eqnarray*}
+&&\mbox{Instead of: } \\
+&& \quad F\stackrel{s.r.s}{\longrightarrow }{\bf X} = 
+(X_1,X_2,\dots, X_n) \, \quad (\hat \sigma_{\hat\theta} =\underbrace{\sigma_\theta(F_n)}_{unknown}) 
+\\
+&& \mbox{It is done: } \\
+&& \quad F_n\stackrel{s.r.s}{\longrightarrow }\quad {\bf X^{*}}=(X_1^{*},X_2^{*},
 \dots ,X_n^{*}) \quad (\hat \sigma_{\hat\theta}= \hat \sigma_{\hat \theta}^* \simeq \sigma_{\hat \theta}^*).
-$$
+
+\end{eqnarray*}
 :::
-
-
+  
 ## Bootstrap resampling (2)
 
 - Here,   $\sigma_{\hat \theta}^*$ is the bootstrap standard error of $\hat \theta$ and 
 - $\hat \sigma_{\hat \theta}^*$ the bootstrap estimate of the standard error of $\hat \theta$.
 
-- This means that the sampling process consists of *extracting samples of size $n$ of $F_n$* , that is:
-  - ${\bf X^{*}}=(X_1^{*},X_2^{*},\dots ,X_n^{*})$ is a random sample of size $n$ obtained *with replacement* from the original sample $(X_1,X_2,\dots ,X_n)$.
+- That is, the new (re-)sampling process consists of *extracting samples of size $n$ of $F_n$*: <br>
+${\bf X^{*}}=(X_1^{*},X_2^{*},\dots ,X_n^{*})$ is a random sample of size $n$ obtained *with replacement* from the original sample $(X_1,X_2,\dots ,X_n)$.
 
-- The samples ${\bf X^*}$, obtained through this procedure are called *bootstrap*\ samples or *re-samples*.
-
-
-## Bootstrap standard errors
+- Samples ${\bf X^*}$, obtained through this procedure are called *bootstrap*\ samples or *re-samples*.
 
 
-- The *bootstrap*\ distribution is usually not known.
-- Computing the standard error from resamples is then done by means of a *Monte Carlo algorithm*
+## The bootstrap distribution
 
-:::{.font80}
+- The distribution of a statistic computed from re-samples is called the *bootstrap distribution*,
+
+:::{.font90}
+\begin{eqnarray*}
+\mathcal {L}(\hat \theta)&\simeq& P_F(\hat\theta \leq t): \mbox{Sampling distribution of } \hat \theta,\\
+\mathcal {L}(\hat \theta^*)&\simeq& P_{F_n}(\hat\theta^* \leq t): \mbox{Bootstrap distribution of } \hat \theta,
+\end{eqnarray*}
+:::
+
+- This distribution is usually not known.
+
+- However the sampling process and the calculation of the statistics can be approximated using a Monte Carlo Algorithm.
+
+## Bootstrap Monte Carlo Algorithm
+
+:::{.font90}
 1.  Draw a bootstrap sample, ${\bf x}_1^{*}$ from $F_n$ and compute $\hat{\theta}({\bf x}_1^{*})$.
-2.  Repeat $B$ times yielding $\hat{\theta}({\bf x}_2^{*})$, $\dots$, $\hat{\theta}({\bf x}_B^{*})$ estimates.
+2.  Repeat (1) $B$ times yielding $\hat{\theta}({\bf x}_2^{*})$, $\dots$, $\hat{\theta}({\bf x}_B^{*})$ estimates.
 3. Compute:
 \begin{equation*}
 \hat{\sigma}_B (\hat\theta)= \sqrt{
 	\frac{
 		\sum_{b=1}^B\left( \hat{\theta}(%
-		{\bf x^{*}_i})-\overline{\hat{\theta}}\right) ^2
+		{\bf x^{*}_i})-\overline{\hat{\theta}^*}\right) ^2
 		}{
 		(B-1)	
 		}
-	}, \quad \overline{\hat{\theta}}\equiv \frac 1B\sum_{b=1}^B\hat{\theta}\left( {\bf x}%
+	}, \quad \overline{\hat{\theta}^*}\equiv \frac 1B\sum_{b=1}^B\hat{\theta}\left( {\bf x}%
 _b^{*}\right)
 \end{equation*}
 :::
 
 
-## Bootstrap Algorithm 
+## Bootstrap Estimates of SE 
 
 - Main idea is that the  *bootstrap* standard error of $\hat\theta$, $\sigma_B(\hat\theta)$ can be *approximated* by $\hat{\sigma}_B (\hat\theta)$.
 
@@ -380,7 +388,6 @@ show(ames_bag1)
 # Out-of-bag estimate of root mean squared error:  26350.91 
 
 ```
-
 
 
 ## References
