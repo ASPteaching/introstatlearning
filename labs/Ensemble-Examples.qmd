@@ -59,7 +59,7 @@ library(ipred)       # for fitting bagged decision trees
 
 The first example is adapted from [@Boehmke2020], also [available online](https://bradleyboehmke.github.io/HOML/).
 
-This exercise relies on the well-known `AmesHousing` dataset on hose prices in Ames, IA.
+This example relies on the `AmesHousing` dataset on house prices in Ames, IA.
 
 ```{r}
 if(!require(AmesHousing))

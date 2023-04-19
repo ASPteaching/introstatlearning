@@ -19,6 +19,7 @@ format:
     css: "css4CU.css"
     theme: sky
     self-contained: true
+    embed-resources: true
     self-contained-math: true
 #    suppress-bibliography: true
 bibliography: "StatisticalLearning.bib"
@@ -388,6 +389,27 @@ show(ames_bag1)
 # Out-of-bag estimate of root mean squared error:  26350.91 
 
 ```
+
+## Interpetability: The "achiles heel"
+
+- Trees may have a straightford interpretation,
+  - Plotting the tree provides information about
+    - which variables are important
+    - how they act on the prediction
+- Ensembles are less intuitive because 
+  - there is no consensus tree.
+  - not clear which variables are most important
+
+
+## Variable importance
+
+- A complementary way to interpret a tree is by quantifying how *important* is each feature.
+
+- Done measuring the total reduction in loss function associated with each variable across all splits.
+
+- This measure can be extended to an ensemble simply by adding up variable importance over all trees built.
+
+
 
 
 ## References

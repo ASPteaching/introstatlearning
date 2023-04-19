@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2023-04-17">
+<meta name="dcterms.date" content="2023-04-19">
 
 <title>Decision Trees Lab 2: Ensembles</title>
 <style>
@@ -135,7 +135,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 17, 2023</p>
+      <p class="date">April 19, 2023</p>
     </div>
   </div>
   
@@ -160,7 +160,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="bagging-trees" class="level1">
 <h1>Bagging trees</h1>
 <p>The first example is adapted from <span class="citation" data-cites="Boehmke2020">(<a href="#ref-Boehmke2020" role="doc-biblioref"><strong>Boehmke2020?</strong></a>)</span>, also <a href="https://bradleyboehmke.github.io/HOML/">available online</a>.</p>
-<p>This exercise relies on the well-known <code>AmesHousing</code> dataset on hose prices in Ames, IA.</p>
+<p>This example relies on the <code>AmesHousing</code> dataset on house prices in Ames, IA.</p>
 <div class="cell" data-hash="Ensemble-Examples_cache/html/unnamed-chunk-2_a9419b574f7e14dcf6d1a9f889de8973">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(AmesHousing))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"AmesHousing"</span>, <span class="at">dep=</span><span class="cn">TRUE</span>)</span>

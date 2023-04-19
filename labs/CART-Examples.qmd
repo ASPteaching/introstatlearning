@@ -29,8 +29,9 @@ execute:
     message: false
     warning: false
 bibliography: "../StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
 ---
-
 
 ```{r packages, include=FALSE}
 # If the package is not installed then it will be installed
@@ -41,7 +42,6 @@ if(!require("ISLR")) install.packages("ISLR")
 if(!require("rpart.plot")) install.packages("rpart.plot")
 ```
 
-
 ```{r assignments}
 # This chunk is used to do the assignment of values to R variables
 # This code must be adapted to any change of datasets or 
@@ -49,7 +49,6 @@ if(!require("rpart.plot")) install.packages("rpart.plot")
 myDescription <- "The data are a simulated data set containing sales of child car seats at different stores [@james2013introduction]"
 mydataset <- Carseats
 ```
-
 
 ```{r, dataDescription}
 n <- nrow(mydataset)
@@ -64,15 +63,15 @@ The Pima Indian Diabetes data set (`PimaIndiansDiabetes2`) is available in the `
 
 The data contains 768 individuals (female) and 9 clinical variables for predicting the probability of individuals in being diabete-positive or negative:
 
-- pregnant: number of times pregnant
-- glucose: plasma glucose concentration
-- pressure: diastolic blood pressure (mm Hg)
-- triceps: triceps skin fold thickness (mm)
-- insulin: 2-Hour serum insulin (mu U/ml)
-- mass: body mass index (weight in kg/(height in m)^2)
-- pedigree: diabetes pedigree function
-- age: age (years)
-- diabetes: class variable
+-   pregnant: number of times pregnant
+-   glucose: plasma glucose concentration
+-   pressure: diastolic blood pressure (mm Hg)
+-   triceps: triceps skin fold thickness (mm)
+-   insulin: 2-Hour serum insulin (mu U/ml)
+-   mass: body mass index (weight in kg/(height in m)\^2)
+-   pedigree: diabetes pedigree function
+-   age: age (years)
+-   diabetes: class variable
 
 A typical classification/prediction problem is to build a model that can distinguish and predict diabetes using some or all the variables in the dataset.
 
@@ -84,7 +83,7 @@ data("PimaIndiansDiabetes2", package = "mlbench")
 skim(PimaIndiansDiabetes2)
 ```
 
-## Building a classification tree with `rpart``
+## Building a classification tree with \`rpart\`\`
 
 Start building a simple tree with default parameters
 
@@ -107,17 +106,14 @@ plot(model1)
 text(model1, digits = 3, cex=0.8)
 ```
 
-A nicer plot can be obtained using the `rpart.plot` function from the `rpart.plot` package.
-This function allows for multiple tunings, but the default values may already yield a nice informative plot.
+A nicer plot can be obtained using the `rpart.plot` function from the `rpart.plot` package. This function allows for multiple tunings, but the default values may already yield a nice informative plot.
 
 ```{r}
 rpart.plot(model1, cex=.7)
 detach(package:rpart.plot)
 ```
 
-
 If we believed the model was ready for use we could use it to predict diabetes for new subject.
-
 
 **Imagine we kow nothing about overfitting**. We may want to check the accuracy of the model on the dataset we have used to build it.
 
@@ -147,25 +143,21 @@ mean(predicted.classes.test == test.data$diabetes)
 
 The accuracy is good, but smaller, as expected.
 
-
-
-
 # A classification tree
 
 ## Data description
 
-***
+------------------------------------------------------------------------
 
-_In this section,  you should provide a short explanation about problem and the data set._
+*In this section, you should provide a short explanation about problem and the data set.*
 
-***
+------------------------------------------------------------------------
 
-
-`r myDescription`. 
+`r myDescription`.
 
 The data set has **`r n`** observations on **`r p`** variables. The variable names are: *`r toString(names(mydataset))`*.
 
-We start categorizing the variable `Sales` creating a new variable,  `High`, which takes on a value of `Yes` if the `Sales`  variable exceeds 8, and  a value of `No` otherwise.
+We start categorizing the variable `Sales` creating a new variable, `High`, which takes on a value of `Yes` if the `Sales` variable exceeds 8, and a value of `No` otherwise.
 
 ```{r}
 # as.factor() changes the type of variable to factor
@@ -174,18 +166,17 @@ mydataset$High=as.factor(ifelse(mydataset$Sales<=8,"No","Yes"))
 
 The number of observations for each class is:
 
-
 ```{r}
 kable(table(mydataset$High), caption= "Number of observations for each class", col.names = c('High','Freq'))
 ```
 
-The aim is of this study is to predict the categorical values of sales (`High`) using all variables but `Sales`. 
+The aim is of this study is to predict the categorical values of sales (`High`) using all variables but `Sales`.
 
 It is a classification problem and we will build a *classification tree model*.
 
 ### Data summarization
 
-This is a short  data set summary
+This is a short data set summary
 
 ```{r}
 summary(mydataset)
@@ -199,25 +190,23 @@ skimr::skim(mydataset)
 
 ## Preprocess
 
-***
+------------------------------------------------------------------------
 
-_It is very common that the data need to be preprocessed before training the model_
+*It is very common that the data need to be preprocessed before training the model*
 
-***
+------------------------------------------------------------------------
 
-In this case, no cleaning or preprocessing are required. 
-
+In this case, no cleaning or preprocessing are required.
 
 ## Train/Test partition of data
 
-In order to properly evaluate the performance of a model, we must estimate the error rather than simply computing the training error. 
+In order to properly evaluate the performance of a model, we must estimate the error rather than simply computing the training error.
 
-We 
+We
 
-1. split the observations into a training set and a test set, 
-2. build the model using the training set, and 
-3. evaluate its performance on the test data.
-
+1.  split the observations into a training set and a test set,
+2.  build the model using the training set, and
+3.  evaluate its performance on the test data.
 
 ```{r, dataPartition}
 set.seed(2)
@@ -236,7 +225,7 @@ kable(table(mydataset[train,"High"]), caption= "Train data: number of observatio
       col.names = c('High','Freq'))
 ```
 
-## Train model 
+## Train model
 
 We now use the `tree()` function to fit a classification tree in order to predict `High` using all variables but `Sales` using only de train set.
 
@@ -254,18 +243,17 @@ summary(tree.mydataset)
 # summary(tree.mydataset2)
 ```
 
- We can thus define the deviance of a tree (roughly equivalent to the concept of impurity)
- as the sum over all leaves of:
+We can thus define the deviance of a tree (roughly equivalent to the concept of impurity) as the sum over all leaves of:
 
 $$
 -2 \sum_m \sum_k n_{mk} log(\hat{p}_{mk}),
 $$
 
-where $n_{mk}$ is the number of observations in the `m`th terminal node that belong to the `k`th class. The *residual mean deviance* reported is simply the deviance divided by $n - |T_0|$ where $T_0$ is the number of terminal nodes. 
+where $n_{mk}$ is the number of observations in the `m`th terminal node that belong to the `k`th class. The *residual mean deviance* reported is simply the deviance divided by $n - |T_0|$ where $T_0$ is the number of terminal nodes.
 
 ## Plot the Tree
 
-The next step is display the tree graphically. We use the `plot()` function to display the tree structure, and the `text()`function to display the node labels. 
+The next step is display the tree graphically. We use the `plot()` function to display the tree structure, and the `text()`function to display the node labels.
 
 ```{r fig.DT1, fig.cap="Classification tree", fig.height=10, fig.width=12}
 # plot(tree.mydataset)
@@ -274,17 +262,15 @@ The next step is display the tree graphically. We use the `plot()` function to d
 # text(tree.mydataset,pretty=0)
 ```
 
-It is also possible to show a `R` print output corresponding to each branch of the tree. 
+It is also possible to show a `R` print output corresponding to each branch of the tree.
 
 ```{r}
 tree.mydataset
 ```
 
-
 ## Prediction
 
 We now evaluate the performance of the classification tree on the test data. The `predict()` function can be used for this purpose.
-
 
 ```{r}
 tree.pred=predict(tree.mydataset,mydataset.test,type="class")
@@ -293,14 +279,11 @@ res
 accrcy <- sum(diag(res)/sum(res))
 ```
 
-
 The accuracy is **`r accrcy`** or misclassification error rate is **`r 1-accrcy`**.
-
-
 
 ## Prune the tree (Tunning model)
 
-We consider whether pruning the tree could lead to improved results. 
+We consider whether pruning the tree could lead to improved results.
 
 ```{r}
 set.seed(3)
@@ -309,8 +292,7 @@ names(cv.mydataset)
 cv.mydataset
 ```
 
-
-Note that, despite the name, `dev` corresponds to the cross-validation error rate in this instance. 
+Note that, despite the name, `dev` corresponds to the cross-validation error rate in this instance.
 
 We plot the error rate as a function of both `size`and `k`.
 
@@ -360,7 +342,6 @@ accrcy <- sum(diag(res)/sum(res))
 
 The accuracy is **`r accrcy`**.
 
-
 # A regression tree example
 
 This example is borrowed from [@amat2017].
@@ -374,7 +355,6 @@ datos <- Boston
 head(datos, 3)
 ```
 
-
 Our goal is to fit a regression model that allows predicting the average price of a home (medv) based on the available variables.
 
 ```{r, fig.align='center'}
@@ -387,6 +367,7 @@ pairs(datos[,c(1:6,14)], cex = 0.7, upper.panel = ps, col = color)
 pairs(datos[,c(7:14)], cex = 0.7, upper.panel = ps, col = color)
 
 ```
+
 ## Model fitting
 
 Create a train and test sets
@@ -398,12 +379,10 @@ datos_train <- datos[train,]
 datos_test  <- datos[-train,]
 ```
 
-We use the `tree` function of the `tree` package to build the model.
-This function grows the tree until it meets a stop condition. By default, these conditions are:
+We use the `tree` function of the `tree` package to build the model. This function grows the tree until it meets a stop condition. By default, these conditions are:
 
-- `mincut`: minimum number of observations that at least one of the child nodes must have for the division to occur.
-- `minsize`: minimum number of observations a node must have in order for it to be split.
-
+-   `mincut`: minimum number of observations that at least one of the child nodes must have for the division to occur.
+-   `minsize`: minimum number of observations a node must have in order for it to be split.
 
 ```{r}
 set.seed(123)
@@ -417,12 +396,12 @@ arbol_regresion <- tree::tree(
 summary(arbol_regresion)
 ```
 
-The `summary`  shows that the trained tree has a total of 6 terminal nodes and that the variables `rm, lstat, dis` and `tax` have been used as predictors. 
+The `summary` shows that the trained tree has a total of 6 terminal nodes and that the variables `rm, lstat, dis` and `tax` have been used as predictors.
 
 In the context of regression trees, the `Residual mean deviance` term is the residual sum of squares divided by (number of observations - number of terminal nodes). The smaller the deviation, the better the fit of the tree to the training observations.
 
-
 The tree can be visualized:
+
 ```{r}
 par(mar = c(1,1,1,1))
 plot(x = arbol_regresion, type = "proportional")
@@ -431,7 +410,7 @@ text(x = arbol_regresion, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick
 
 ## Prunning the tree
 
-We use the  `cv.tree` function that uses cross validation to identify the optimal penalty value. By default, this function relies on  the *deviance* to guide the pruning process.
+We use the `cv.tree` function that uses cross validation to identify the optimal penalty value. By default, this function relies on the *deviance* to guide the pruning process.
 
 We **grow the tree again** so we have a big tree to prune:
 
@@ -452,19 +431,17 @@ cv_arbol <- tree::cv.tree(arbol_regresion, K = 5)
 
 The function returns an object `cv_arbol` containing:
 
-- `size`: The size (number of terminal nodes) of each tree.
-- `dev`: The cross-validation test error estimate for each tree size.
-- `k`: The range of penalty values $\alpha$  evaluated.
-- `method`: The criteria used to select the best tree.
+-   `size`: The size (number of terminal nodes) of each tree.
+-   `dev`: The cross-validation test error estimate for each tree size.
+-   `k`: The range of penalty values $\alpha$ evaluated.
+-   `method`: The criteria used to select the best tree.
 
 These can be used to visualize and understand the optimization performed.
-
 
 ```{r}
 size_optimo <- rev(cv_arbol$size)[which.min(rev(cv_arbol$dev))]
 paste("Optimal size obtained is:", size_optimo)
 ```
-
 
 ```{r}
 library(ggplot2)
@@ -495,7 +472,6 @@ ggarrange(p1, p2)
 
 Once the optimal value identified, the final pruning is applied with the `prune.tree` function. This function also accepts the optimal value of $\alpha$ instead of size.
 
-
 ```{r}
 arbol_final <- tree::prune.tree(
                   tree = arbol_regresion,
@@ -520,6 +496,7 @@ predicciones <- predict(arbol_regresion, newdata = datos_test)
 test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
 paste("Error de test (rmse) del árbol inicial:", round(test_rmse,2))
 ```
+
 And for the final tree:
 
 ```{r}
@@ -527,6 +504,121 @@ predicciones_finales <- predict(arbol_final, newdata = datos_test)
 test_rmse    <- sqrt(mean((predicciones - datos_test$medv)^2))
 paste("Error de test (rmse) del árbol final:", round(test_rmse,2))
 ```
+
+# Alternative packages for CART
+
+## Comparison between `caret` and `rpart`
+
+Two popular frames for working with trees are the `cart`and the `rpart` packages. The former is focused on decision trees, while the firs is a generic framework to perform any type of classification and prediction tasks, including trees.
+
+The tables below shows a comparison between the main functions for working with trees with `rpart` and `caret`.
+
+| **Task**                            | **`caret`** Package                                                  | **`rpart`** Package                                |
+|:------------------------------------|:---------------------------------------------------------------------|:---------------------------------------------------|
+| **Building a Decision Tree**        | **`train()`** function with method = "rpart"                         | **`rpart()`** function                             |
+| **Plotting a Decision Tree**        | **`plot()`** function with type = "text"                             | **`plot()`** function                              |
+| **Pruning a Decision Tree**         | **`train()`** function with method = "rpart" and tuneLength \> 1     | **`prune()`** function                             |
+| **Evaluating Model Performance**    | **`train()`** function with method = "rpart" and metric = "Accuracy" | **`predict()`** function                           |
+| **Handling Missing Values**         | **`preProcess()`** function with method = "medianImpute"             | **`na.action`** argument in **`rpart()`** function |
+| **Tuning Hyperparameters**          | **`train()`** function with method = "rpart" and tuneGrid argument   | **`rpart.control()`** function                     |
+| **Visualizing Variable Importance** | **`varImp()`** function                                              | **`importance()`** function                        |
+
+here's an extended comparison table that includes examples of each task using **`caret`** and **`rpart`**:
+
+| **Task**                            | **`caret`** Package                                                                                       | **`rpart`** Package                                                                                 |
+|:------------------------------------|:----------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------|
+| **Building a Decision Tree**        | **`train(Species ~ ., method = "rpart", data = iris)`**                                                   | **`rpart(Species ~ ., data = iris)`**                                                               |
+| **Plotting a Decision Tree**        | **`plot(fit, type = "text")`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                         | **`plot(fit)`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                                  |
+| **Pruning a Decision Tree**         | **`train(Species ~ ., method = "rpart", data = iris, tuneLength = 5)`**                                   | **`fit <- rpart(Species ~ ., data = iris)`**\<br\> **`prune(fit, cp = 0.02)`**                      |
+| **Evaluating Model Performance**    | **`train(Species ~ ., method = "rpart", data = iris, metric = "Accuracy")`**                              | **`fit <- rpart(Species ~ ., data = iris)`**\<br\> **`pred <- predict(fit, iris, type = "class")`** |
+| **Handling Missing Values**         | **`preProcess(iris, method = "medianImpute")`**                                                           | **`rpart(Species ~ ., data = na.omit(iris), na.action = na.rpart)`**                                |
+| **Tuning Hyperparameters**          | **`train(Species ~ ., method = "rpart", data = iris, tuneGrid = expand.grid(cp = c(0.001, 0.01, 0.1)))`** | **`rpart(Species ~ ., data = iris, control = rpart.control(cp = c(0.001, 0.01, 0.1)))`**            |
+| **Visualizing Variable Importance** | **`varImp(fit)`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                                      | **`importance(fit)`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                            |
+
+In the examples above, we tried to make the parameters as comparable as possible to
+
+
+# A case for improvement
+
+This example relies on the `AmesHousing` dataset on house prices in Ames, IA.
+
+```{r}
+if(!require(AmesHousing))
+  install.packages("AmesHousing", dep=TRUE)
+ames <- AmesHousing::make_ames()
+```
+
+```{r}
+if(!require(rsample))
+  install.packages("rsample", dep=TRUE)
+# Stratified sampling with the rsample package
+set.seed(123)
+split <- rsample::initial_split(ames, prop = 0.7, 
+                       strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
+```
+
+We use the `rpart`package to fit a regression tree to predict the `Sales_price` variable.
+
+```{r}
+require(rpart)
+ames_dt1 <- rpart(
+  formula = Sale_Price ~ .,
+  data    = ames_train
+  # method  = "anova"
+)
+```
+
+We can visualize the tree with `rpart.plot()`
+
+```{r}
+require(rpart.plot)
+rpart.plot(ames_dt1, cex=0.5)
+```
+
+`rpart()` automatically applies a range of cost complexity ($\alpha$ values to prune the tree).
+
+To compare the error for each $\alpha$ value, `rpart()` performs a 10-fold CV (by default).
+
+```{r}
+printcp(ames_dt1)
+```
+
+```{r}
+plotcp(ames_dt1)
+```
+
+A good choice of `cp` for pruning is often the leftmost value for which the mean lies below the horizontal line
+
+## Feature importance
+
+The `vip` function from the `vip` package allows computing variable importance from a built predictor object.
+
+```{r}
+if(!require(vip))
+  install.packages("vip", dep=TRUE)
+require(vip)
+## ? vip
+vip(ames_dt1, num_features = 40, bar = FALSE)
+```
+
+The previous tree was built with `rpart` default values. (type ? `rpart` to see which thet are).
+
+If we set the complexity parameter to zer, the tree is grown at its maximum size.
+
+```{r}
+ames_dt2 <- rpart(
+    formula = Sale_Price ~ .,
+    data    = ames_train,
+    method  = "anova", 
+    control = list(cp = 0, xval = 10)
+)
+vip2<- vip(ames_dt1, num_features = 40, bar = FALSE)
+```
+
+If we use `caret`instead of `rpart` the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative.
+
 
 # Exercises
 
@@ -544,10 +636,6 @@ This problem involves the $O J$ data set which is part of the ISLR2 package.
 (j) Compare the training error rates between the pruned and unpruned trees. Which is higher?
 (k) Compare the test error rates between the pruned and unpruned trees. Which is higher?
 
-
 Once you have solved the exercise, try to repeat it using another R package, either `rpàrt` or `caret`. Compare the results obtained and comment about the differences observed.
 
 # References
-
-
-

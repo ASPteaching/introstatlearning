@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2023-04-17">
+<meta name="dcterms.date" content="2023-04-19">
 
 <title>Decision Trees Lab 1</title>
 <style>
@@ -153,6 +153,14 @@ div.csl-indent {
   <li><a href="#prunning-the-tree" id="toc-prunning-the-tree" class="nav-link" data-scroll-target="#prunning-the-tree">Prunning the tree</a></li>
   <li><a href="#predicting-with-the-model" id="toc-predicting-with-the-model" class="nav-link" data-scroll-target="#predicting-with-the-model">Predicting with the model</a></li>
   </ul></li>
+  <li><a href="#alternative-packages-for-cart" id="toc-alternative-packages-for-cart" class="nav-link" data-scroll-target="#alternative-packages-for-cart">Alternative packages for CART</a>
+  <ul class="collapse">
+  <li><a href="#comparison-between-caret-and-rpart" id="toc-comparison-between-caret-and-rpart" class="nav-link" data-scroll-target="#comparison-between-caret-and-rpart">Comparison between <code>caret</code> and <code>rpart</code></a></li>
+  </ul></li>
+  <li><a href="#a-case-for-improvement" id="toc-a-case-for-improvement" class="nav-link" data-scroll-target="#a-case-for-improvement">A case for improvement</a>
+  <ul class="collapse">
+  <li><a href="#feature-importance" id="toc-feature-importance" class="nav-link" data-scroll-target="#feature-importance">Feature importance</a></li>
+  </ul></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises">Exercises</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
@@ -179,7 +187,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">April 17, 2023</p>
+      <p class="date">April 19, 2023</p>
     </div>
   </div>
   
@@ -1296,6 +1304,218 @@ Distribution of residuals:
 <pre><code>[1] "Error de test (rmse) del árbol final: 5.43"</code></pre>
 </div>
 </div>
+</section>
+</section>
+<section id="alternative-packages-for-cart" class="level1">
+<h1>Alternative packages for CART</h1>
+<section id="comparison-between-caret-and-rpart" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-between-caret-and-rpart">Comparison between <code>caret</code> and <code>rpart</code></h2>
+<p>Two popular frames for working with trees are the <code>cart</code>and the <code>rpart</code> packages. The former is focused on decision trees, while the firs is a generic framework to perform any type of classification and prediction tasks, including trees.</p>
+<p>The tables below shows a comparison between the main functions for working with trees with <code>rpart</code> and <code>caret</code>.</p>
+<table class="table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 44%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Task</strong></th>
+<th style="text-align: left;"><strong><code>caret</code></strong> Package</th>
+<th style="text-align: left;"><strong><code>rpart</code></strong> Package</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Building a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>train()</code></strong> function with method = “rpart”</td>
+<td style="text-align: left;"><strong><code>rpart()</code></strong> function</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Plotting a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>plot()</code></strong> function with type = “text”</td>
+<td style="text-align: left;"><strong><code>plot()</code></strong> function</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pruning a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>train()</code></strong> function with method = “rpart” and tuneLength &gt; 1</td>
+<td style="text-align: left;"><strong><code>prune()</code></strong> function</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Evaluating Model Performance</strong></td>
+<td style="text-align: left;"><strong><code>train()</code></strong> function with method = “rpart” and metric = “Accuracy”</td>
+<td style="text-align: left;"><strong><code>predict()</code></strong> function</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Handling Missing Values</strong></td>
+<td style="text-align: left;"><strong><code>preProcess()</code></strong> function with method = “medianImpute”</td>
+<td style="text-align: left;"><strong><code>na.action</code></strong> argument in <strong><code>rpart()</code></strong> function</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Tuning Hyperparameters</strong></td>
+<td style="text-align: left;"><strong><code>train()</code></strong> function with method = “rpart” and tuneGrid argument</td>
+<td style="text-align: left;"><strong><code>rpart.control()</code></strong> function</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Visualizing Variable Importance</strong></td>
+<td style="text-align: left;"><strong><code>varImp()</code></strong> function</td>
+<td style="text-align: left;"><strong><code>importance()</code></strong> function</td>
+</tr>
+</tbody>
+</table>
+<p>here’s an extended comparison table that includes examples of each task using <strong><code>caret</code></strong> and <strong><code>rpart</code></strong>:</p>
+<table class="table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 43%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Task</strong></th>
+<th style="text-align: left;"><strong><code>caret</code></strong> Package</th>
+<th style="text-align: left;"><strong><code>rpart</code></strong> Package</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Building a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>train(Species ~ ., method = "rpart", data = iris)</code></strong></td>
+<td style="text-align: left;"><strong><code>rpart(Species ~ ., data = iris)</code></strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Plotting a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>plot(fit, type = "text")</code></strong>&lt;br&gt; <strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong></td>
+<td style="text-align: left;"><strong><code>plot(fit)</code></strong>&lt;br&gt; <strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pruning a Decision Tree</strong></td>
+<td style="text-align: left;"><strong><code>train(Species ~ ., method = "rpart", data = iris, tuneLength = 5)</code></strong></td>
+<td style="text-align: left;"><strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong>&lt;br&gt; <strong><code>prune(fit, cp = 0.02)</code></strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Evaluating Model Performance</strong></td>
+<td style="text-align: left;"><strong><code>train(Species ~ ., method = "rpart", data = iris, metric = "Accuracy")</code></strong></td>
+<td style="text-align: left;"><strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong>&lt;br&gt; <strong><code>pred &lt;- predict(fit, iris, type = "class")</code></strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Handling Missing Values</strong></td>
+<td style="text-align: left;"><strong><code>preProcess(iris, method = "medianImpute")</code></strong></td>
+<td style="text-align: left;"><strong><code>rpart(Species ~ ., data = na.omit(iris), na.action = na.rpart)</code></strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Tuning Hyperparameters</strong></td>
+<td style="text-align: left;"><strong><code>train(Species ~ ., method = "rpart", data = iris, tuneGrid = expand.grid(cp = c(0.001, 0.01, 0.1)))</code></strong></td>
+<td style="text-align: left;"><strong><code>rpart(Species ~ ., data = iris, control = rpart.control(cp = c(0.001, 0.01, 0.1)))</code></strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Visualizing Variable Importance</strong></td>
+<td style="text-align: left;"><strong><code>varImp(fit)</code></strong>&lt;br&gt; <strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong></td>
+<td style="text-align: left;"><strong><code>importance(fit)</code></strong>&lt;br&gt; <strong><code>fit &lt;- rpart(Species ~ ., data = iris)</code></strong></td>
+</tr>
+</tbody>
+</table>
+<p>In the examples above, we tried to make the parameters as comparable as possible to</p>
+</section>
+</section>
+<section id="a-case-for-improvement" class="level1">
+<h1>A case for improvement</h1>
+<p>This example relies on the <code>AmesHousing</code> dataset on house prices in Ames, IA.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(AmesHousing))</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"AmesHousing"</span>, <span class="at">dep=</span><span class="cn">TRUE</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(rsample))</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"rsample"</span>, <span class="at">dep=</span><span class="cn">TRUE</span>)</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Stratified sampling with the rsample package</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>split <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, </span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">strata =</span> <span class="st">"Sale_Price"</span>)</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We use the <code>rpart</code>package to fit a regression tree to predict the <code>Sales_price</code> variable.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(rpart)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>ames_dt1 <span class="ot">&lt;-</span> <span class="fu">rpart</span>(</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">formula =</span> Sale_Price <span class="sc">~</span> .,</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data    =</span> ames_train</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># method  = "anova"</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can visualize the tree with <code>rpart.plot()</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(rpart.plot)</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rpart.plot</span>(ames_dt1, <span class="at">cex=</span><span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="CART-Examples_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<p><code>rpart()</code> automatically applies a range of cost complexity (<span class="math inline">\(\alpha\)</span> values to prune the tree).</p>
+<p>To compare the error for each <span class="math inline">\(\alpha\)</span> value, <code>rpart()</code> performs a 10-fold CV (by default).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printcp</span>(ames_dt1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Regression tree:
+rpart(formula = Sale_Price ~ ., data = ames_train)
+
+Variables actually used in tree construction:
+[1] First_Flr_SF  Gr_Liv_Area   Neighborhood  Overall_Qual  Total_Bsmt_SF
+
+Root node error: 1.322e+13/2049 = 6451834021
+
+n= 2049 
+
+         CP nsplit rel error  xerror     xstd
+1  0.474472      0   1.00000 1.00109 0.056615
+2  0.112586      1   0.52553 0.52733 0.028913
+3  0.061442      2   0.41294 0.41761 0.028120
+4  0.027414      3   0.35150 0.36906 0.022074
+5  0.025009      4   0.32409 0.33725 0.021016
+6  0.021179      5   0.29908 0.32696 0.020552
+7  0.017098      6   0.27790 0.29671 0.020302
+8  0.015265      7   0.26080 0.29757 0.020783
+9  0.012415      8   0.24554 0.29152 0.018784
+10 0.011764      9   0.23312 0.28671 0.019076
+11 0.011353     10   0.22136 0.27783 0.018949
+12 0.010000     11   0.21000 0.27218 0.018745</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotcp</span>(ames_dt1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="CART-Examples_files/figure-html/unnamed-chunk-38-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<p>A good choice of <code>cp</code> for pruning is often the leftmost value for which the mean lies below the horizontal line</p>
+<section id="feature-importance" class="level2">
+<h2 class="anchored" data-anchor-id="feature-importance">Feature importance</h2>
+<p>The <code>vip</code> function from the <code>vip</code> package allows computing variable importance from a built predictor object.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(vip))</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"vip"</span>, <span class="at">dep=</span><span class="cn">TRUE</span>)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(vip)</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="do">## ? vip</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="fu">vip</span>(ames_dt1, <span class="at">num_features =</span> <span class="dv">40</span>, <span class="at">bar =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="CART-Examples_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<p>The previous tree was built with <code>rpart</code> default values. (type ? <code>rpart</code> to see which thet are).</p>
+<p>If we set the complexity parameter to zer, the tree is grown at its maximum size.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>ames_dt2 <span class="ot">&lt;-</span> <span class="fu">rpart</span>(</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">formula =</span> Sale_Price <span class="sc">~</span> .,</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data    =</span> ames_train,</span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">method  =</span> <span class="st">"anova"</span>, </span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">control =</span> <span class="fu">list</span>(<span class="at">cp =</span> <span class="dv">0</span>, <span class="at">xval =</span> <span class="dv">10</span>)</span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>vip2<span class="ot">&lt;-</span> <span class="fu">vip</span>(ames_dt1, <span class="at">num_features =</span> <span class="dv">40</span>, <span class="at">bar =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we use <code>caret</code>instead of <code>rpart</code> the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative.</p>
 </section>
 </section>
 <section id="exercises" class="level1">
