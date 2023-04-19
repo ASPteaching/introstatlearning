@@ -30,6 +30,8 @@ execute:
     warning: false
     cache: true
 bibliography: "../StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r packages, include=FALSE}
@@ -74,11 +76,11 @@ if(!require(rsample))
 set.seed(123)
 split <- rsample::initial_split(ames, prop = 0.7, 
                        strata = "Sale_Price")
-ames_train  <- training(split)
-ames_test   <- testing(split)
+ames_train  <- rsample::training(split)
+ames_test   <- rsample::testing(split)
 ```
 
-Building a decision trees to predict the sales price for the Ames housing data yields a poor perfrmance classifier/predictor that is beated by alternatives such as MARS or KNN (check it!)
+Building a decision trees to predict the sales price for the Ames housing data yields a poor performance classifier/predictor that is beaten by alternatives such as MARS or KNN (check it!)
 
 In this example, rather than use a single pruned decision tree, we can use, say, 100 bagged unpruned trees (by not pruning the trees we're keeping bias low and variance high which is when bagging will have the biggest effect).
 
@@ -105,14 +107,12 @@ ames_bag1 <- bagging(
 )
 )
 
-#   user  system elapsed 
-#  20.70    0.04   36.61 
 ```
-
+Bagging, as most ensemble procedures, can be time consuming.
+See [@Boehmke2020](https://bradleyboehmke.github.io/HOML/bagging.html#easily-parallelize) for an example on how to easily parallelize code, and save time.
 
 ```{r}
 show(ames_bag1)
-
 ```
 
 Bagging tends to improve quickly as the number of resampled trees increases, and then it reaches a platform.
@@ -122,6 +122,167 @@ The figure below has been produced iterated the computation above over `nbagg` v
 ```{r, echo=FALSE, fig.align='center', out.width="100%", fig.cap="Error curve for bagging 1-200 deep, unpruned decision trees. The benefit of bagging is optimized at 187 trees although the majority of error reduction occurred within the first 100 trees"}
 knitr::include_graphics("images/baggingRSME.png")
 ```
+
+## Variable importance
+
+Due to the bagging process, models that are normally perceived as interpretable are no longer so. 
+
+However, we can still make inferences about how features are influencing our model using *feature importance* measures based on the sum of the reduction in the loss function (e.g., SSE) attributed to each variable at each split in a given tree.
+
+```{r}
+pred.imp <- varImp(ames_bag1) 
+pred.imp$Overall<- pred.imp$Overall/sum(pred.imp$Overall)*100 
+  
+varImpt <- pred.imp %>%  arrange (desc(Overall)) %>%
+  slice(1:40)
+head(varImpt, n=10)
+```
+
+
+```{r}
+barplot(varImpt$Overall, 
+        names.arg=row.names(varImpt), cex.names=0.1,
+        horiz = TRUE)
+```
+
+
+Alternatively if the tree is built with `caret` the `vip` function from package `vip` can be used.
+
+```{r eval=FALSE}
+  system.time(
+  ames_bag2 <- train(
+    Sale_Price ~ .,
+    data = ames_train,
+    method = "treebag",
+    trControl = trainControl(method = "oob"),
+    nbagg = 100,  
+    keepX=TRUE,
+    control = rpart.control(minsplit = 2, cp = 0)
+    )
+  )
+
+vip::vip(ames_bag2, num_features = 40)
+```
+
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/ames2VIP.png")
+```
+
+## Random forests for gene expression data
+
+Random forest have been particularly successful in Bioinformatics where high dimensional data are common.
+
+One common application has been the use of RF to derive cancer-related classifiers based on gene expression data.
+
+Gene expression data are high dimensional tabular datasets where for each inividual the expression of a high number of genes has been measured
+
+The example uses "RMA-preprocessed gene expression data" obtained by [@Chiaretti2004]. Briefly they consist of:
+
+- 12625 genes (hgu95av2 Affymetrix GeneChip)
+- 128 samples (arrays)
+- phenotypic data on all 128 patients, including:
+- 95 B-cell cancer
+- 33 T-cell cancer
+
+A standard bioinformatic preprocessing has been applied.
+
+```{r}
+if(!require(affy)) BiocManager::install("affy")
+if(!require(genefilter)) BiocManager::install("genefilter")
+if(!require(ALL)) BiocManager::install("ALL")
+library(affy)
+library(ALL)
+data(ALL)
+```
+
+
+Preprocessing is applied to obtain relevant subset of data
+Also, keep 30 arrays here JUST for computational convenience #  
+```{r}
+library(genefilter); 
+e.mat <- 2^(exprs(ALL)[,c(81:110)]) 
+ffun <- filterfun(pOverA(0.20,100)) 
+t.fil <- genefilter(e.mat,ffun) 
+small.eset <- log2(e.mat[t.fil,]) 
+group <- c(rep('B',15),rep('T',15)) 
+dim(small.eset) 
+colnames(small.eset)
+pData(ALL)[81:110,1:5] # column "BT" defines groups
+```
+
+We use the `randomForest` library to build an "out-of-the box" classifier.
+
+```{r}
+if (!require(randomForest)) install.packages("randomForest", dep=TRUE)
+library(randomForest) 
+set.seed(1234) 
+system.time(
+rf <- randomForest(x=t(small.eset),
+                   y=as.factor(group),
+                   ntree=10000) 
+)
+```
+
+Inspect the results
+
+```{r}
+rf
+```
+
+Now look at variable importance:
+
+```{r}
+imp.temp <- abs(rf$importance[,]) 
+t <- order(imp.temp,decreasing=TRUE)
+plot(c(1:nrow(small.eset)),imp.temp[t],log='x',cex.main=1.5,    xlab='gene rank',ylab='variable importance',cex.lab=1.5,    pch=16,main='ALL subset results')  
+```
+
+Or, a better plot:
+
+```{r}
+varImpPlot(rf, n.var=25, main='ALL Subset Results') 
+```
+
+
+We can focus on the 25 most important genes
+
+```{r}
+gn.imp <- names(imp.temp)[t] 
+gn.25 <- gn.imp[1:25] 
+# vector of top 25 genes, in order
+```
+
+We use the Bioinformatics Bioconductor libraries to find out more about these these genes. Information on how to do it can be found at [https://aspteaching.github.io/An-Introduction-to-Pathway-Analysis-with-R-and-Bioconductor/](https://aspteaching.github.io/An-Introduction-to-Pathway-Analysis-with-R-and-Bioconductor/).
+
+```{r}
+if(!require(hgu95av2.db)) BiocManager::install("hgu95av2.db")
+if(!require(AnnotationDbi)) BiocManager::install("AnnotationDbi")
+library(hgu95av2.db)
+geneAnots <- AnnotationDbi::select(hgu95av2.db, gn.25,
+                      c("SYMBOL", "GENENAME"))
+head(geneAnots, n=25)
+```
+
+To end the exploration we plot  heatmap that shows how the two groups differ in gene expression.
+
+```{r}
+t <- is.element(rownames(small.eset),gn.25) 
+sig.eset <- small.eset[t,]    
+# matrix of expression values, not necessarily in order  
+library(RColorBrewer) 
+hmcol <- colorRampPalette(brewer.pal(11,"PuOr"))(256) 
+colnames(sig.eset) <- group 
+# This will label the heatmap columns 
+csc <- rep(hmcol[50],30) 
+csc[group=='T'] <- hmcol[200]    
+# column side color will be purple for T and orange for B 
+heatmap(sig.eset,scale="row", col=hmcol,ColSideColors=csc) 
+```
+
+
+
+
 
 
 # References

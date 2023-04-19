@@ -353,7 +353,7 @@ knitr::include_graphics("images/oobErrorEstimation.png")
   - `rpart` for stratified resampling
   - `ipred` for bagging.
 
-```{r eval=FALSE, echo=TRUE}
+```{r echo=TRUE}
 # Prepare "clean" dataset from raw data
 ames <- AmesHousing::make_ames()
 
@@ -361,38 +361,42 @@ ames <- AmesHousing::make_ames()
 set.seed(123)
 split <- rsample::initial_split(ames, prop = 0.7, 
                        strata = "Sale_Price")
-ames_train  <- training(split)
-ames_test   <- testing(split)
+ames_train  <- rsample::training(split)
+ames_test   <- rsample::testing(split)
 ```
 
 ## Bagging in R (1.2)
 
 
 ```{r eval=FALSE, echo=TRUE}
-system.time()
+system.time(
 ames_bag1 <- ipred::bagging(
   formula = Sale_Price ~ .,
   data = ames_train,
   nbagg = 100,  coob = TRUE,
-  control = rpart.control(minsplit = 2, cp = 0)
-))
+  control = rpart::rpart.control(minsplit = 2, cp = 0)
+)
+)
+#   user  system elapsed 
+#  40.16    0.15   40.34
 ```
 
+<br>
 
 ```{r eval=FALSE, echo=TRUE}
 show(ames_bag1)
 # Bagging regression trees with 100 bootstrap replications 
+# 
 # Call: bagging.data.frame(formula = Sale_Price ~ ., data = ames_train, 
-#    nbagg = 100, coob = TRUE, control = rpart.control(minsplit = 2, 
-#        cp = 0))
-
+#     nbagg = 100, coob = TRUE, control = rpart.control(minsplit = 2, 
+#         cp = 0))
+# 
 # Out-of-bag estimate of root mean squared error:  26350.91 
-
 ```
 
 ## Interpetability: The "achiles heel"
 
-- Trees may have a straightford interpretation,
+- Trees may have a straightforward interpretation,
   - Plotting the tree provides information about
     - which variables are important
     - how they act on the prediction
@@ -409,7 +413,114 @@ show(ames_bag1)
 
 - This measure can be extended to an ensemble simply by adding up variable importance over all trees built.
 
+## Variable importance example
+:::: {.columns}
+
+::: {.column width='40%'}
+- If bagging is performed with `caret`
+- the `vip` function from the `vip` package can be used (see lab examples).
+:::
+
+::: {.column width='60%'}
+```{r, out.width="100%", fig.align='center'}
+knitr::include_graphics("images/ames2VIP.png")
+```
+:::
+
+::::
 
 
+
+
+
+
+
+# Random Forests
+
+## Random forests: decorrelating predictors
+
+- Bagged trees, based on re-samples (of the same sample) tend to be highly correlated. 
+- To get away from this Breimann introduced Random forests, that use a "clever trick" that decorrelates trees:
+  - When growing a tree from one bootstrap sample, 
+  - At each split use only a randomly selected *subset of predictors*.
+
+## Random forests
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/RandomForests1.png")
+```
+
+## How many variables per split?
+
+- The usual recommendation for random selection of variables at each split has been studied by simulation:
+  - For regression default value is $m=p/3$
+  - For classification default value is $m=\sqrt{p}$.
+- Alternatively the number $m$ can be chosen using cross-validation.
+
+## Random forest algorithm
+
+```{r, out.width="100%", fig.cap="Random Forests Algorithm, from chapter 17 in [@Hastie2016]"}
+knitr::include_graphics("images/RandomForestsAlgorithm.png")
+```
+
+## Out-of-the box performance
+
+- Random forests have become popular because they tend to provide very good out-of-the-box performance, that is:
+  - Although they have several hyperparameters that can be tuned, 
+  - the default values tend to produce good results. 
+- Moreover, among the more popular machine learning algorithms, random forests have the least variability in their prediction accuracy when tuning [@Probst2019].
+
+## Out of the box performance
+
+- Training a random forest model with all hyperparameters set to their default values, we get an OOB RMSE that is better than many other classifiers, with or without tuning.
+- This combined with good stability and ease-of-use has made it the option of choice for many problems
+
+## Out of the box performance example
+
+```{r eval=FALSE, echo=TRUE}
+# number of features
+n_features <- length(setdiff(names(ames_train), "Sale_Price"))
+
+# train a default random forest model
+ames_rf1 <- ranger(
+  Sale_Price ~ ., 
+  data = ames_train,
+  mtry = floor(n_features / 3),
+  respect.unordered.factors = "order",
+  seed = 123
+)
+
+# get OOB RMSE
+(default_rmse <- sqrt(ames_rf1$prediction.error))
+## [1] 24859.27
+```
+
+## Tuning hyperparameters
+
+There are several parametres that, appropriately tuned, can improve RF performance.
+
+1. The number of trees in the forest.
+2. The number of features to consider at any given split ($m_{try}$).
+3. The complexity of each tree.
+4. The sampling scheme.
+5. The splitting rule to use during tree construction.
+
+1 and 2 tend to have the largest impact on predictive accuracy.
+
+
+## Random forests in bioinformatics
+
+- Random forests have been thoroughly used in Bioinformatics. See [@Boulesteix2012].
+- Bioinformatics data are often high dimensional with 
+  - dozens or (less often) hundreds of samples/individuals
+  - thousands (or hundreds of thousands) of variables.
+
+## Application of Random forests
+
+- Random forests provide robust classifers for instance for
+  - Distinguishing cancer from non cancer
+  - Predicting tumor type in cancer of unknown origin
+  - Selecting variables (SNPs) in Genome Wide Association Studies
+- Some variation of Random forests are used only for variable selection
 
 ## References

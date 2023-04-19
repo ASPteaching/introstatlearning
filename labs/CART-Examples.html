@@ -1504,18 +1504,7 @@ n= 2049
 <p><img src="CART-Examples_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid" width="768"></p>
 </div>
 </div>
-<p>The previous tree was built with <code>rpart</code> default values. (type ? <code>rpart</code> to see which thet are).</p>
-<p>If we set the complexity parameter to zer, the tree is grown at its maximum size.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>ames_dt2 <span class="ot">&lt;-</span> <span class="fu">rpart</span>(</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">formula =</span> Sale_Price <span class="sc">~</span> .,</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data    =</span> ames_train,</span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">method  =</span> <span class="st">"anova"</span>, </span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">control =</span> <span class="fu">list</span>(<span class="at">cp =</span> <span class="dv">0</span>, <span class="at">xval =</span> <span class="dv">10</span>)</span>
-<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>vip2<span class="ot">&lt;-</span> <span class="fu">vip</span>(ames_dt1, <span class="at">num_features =</span> <span class="dv">40</span>, <span class="at">bar =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>If we use <code>caret</code>instead of <code>rpart</code> the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative.</p>
+<p>If we use <code>caret</code>instead of <code>rpart</code> the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative importance.</p>
 </section>
 </section>
 <section id="exercises" class="level1">

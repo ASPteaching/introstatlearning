@@ -603,21 +603,7 @@ require(vip)
 vip(ames_dt1, num_features = 40, bar = FALSE)
 ```
 
-The previous tree was built with `rpart` default values. (type ? `rpart` to see which thet are).
-
-If we set the complexity parameter to zer, the tree is grown at its maximum size.
-
-```{r}
-ames_dt2 <- rpart(
-    formula = Sale_Price ~ .,
-    data    = ames_train,
-    method  = "anova", 
-    control = list(cp = 0, xval = 10)
-)
-vip2<- vip(ames_dt1, num_features = 40, bar = FALSE)
-```
-
-If we use `caret`instead of `rpart` the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative.
+If we use `caret`instead of `rpart` the total reduction in the loss function across all splits is standardized so that the most important feature has a value of 100 and the remaining features are scored based on their relative importance.
 
 
 # Exercises
