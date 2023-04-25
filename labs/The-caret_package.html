@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.336">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-04-25">
+
+<title>The caret package</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="The-caret_package_files/libs/clipboard/clipboard.min.js"></script>
+<script src="The-caret_package_files/libs/quarto-html/quarto.js"></script>
+<script src="The-caret_package_files/libs/quarto-html/popper.min.js"></script>
+<script src="The-caret_package_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="The-caret_package_files/libs/quarto-html/anchor.min.js"></script>
+<link href="The-caret_package_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="The-caret_package_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="The-caret_package_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="The-caret_package_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="The-caret_package_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction-to-caret" id="toc-introduction-to-caret" class="nav-link active" data-scroll-target="#introduction-to-caret">Introduction to <code>caret</code></a>
+  <ul class="collapse">
+  <li><a href="#learning-to-use-caret" id="toc-learning-to-use-caret" class="nav-link" data-scroll-target="#learning-to-use-caret">Learning to use <code>caret</code></a></li>
+  </ul></li>
+  <li><a href="#guiding-example" id="toc-guiding-example" class="nav-link" data-scroll-target="#guiding-example">Guiding example</a>
+  <ul class="collapse">
+  <li><a href="#data-loading" id="toc-data-loading" class="nav-link" data-scroll-target="#data-loading">Data loading</a></li>
+  <li><a href="#traintest-splitting" id="toc-traintest-splitting" class="nav-link" data-scroll-target="#traintest-splitting">Train/test splitting</a></li>
+  <li><a href="#preprocessing-and-training" id="toc-preprocessing-and-training" class="nav-link" data-scroll-target="#preprocessing-and-training">Preprocessing and training</a>
+  <ul class="collapse">
+  <li><a href="#refining-specifications" id="toc-refining-specifications" class="nav-link" data-scroll-target="#refining-specifications">Refining specifications</a></li>
+  </ul></li>
+  <li><a href="#predict-confusionmatrix-functions" id="toc-predict-confusionmatrix-functions" class="nav-link" data-scroll-target="#predict-confusionmatrix-functions">Predict &amp; confusionMatrix functions</a></li>
+  <li><a href="#model-comparison" id="toc-model-comparison" class="nav-link" data-scroll-target="#model-comparison">Model comparison</a></li>
+  </ul></li>
+  <li><a href="#example-comparison-of-boosting-methods" id="toc-example-comparison-of-boosting-methods" class="nav-link" data-scroll-target="#example-comparison-of-boosting-methods">Example: Comparison of boosting methods</a>
+  <ul class="collapse">
+  <li><a href="#adaboost" id="toc-adaboost" class="nav-link" data-scroll-target="#adaboost">Adaboost</a></li>
+  <li><a href="#gradient-boosting" id="toc-gradient-boosting" class="nav-link" data-scroll-target="#gradient-boosting">Gradient boosting</a></li>
+  <li><a href="#xgboost" id="toc-xgboost" class="nav-link" data-scroll-target="#xgboost">XGBoost</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a>
+  <ul class="collapse">
+  <li><a href="#official-references-and-resources" id="toc-official-references-and-resources" class="nav-link" data-scroll-target="#official-references-and-resources">Official references and resources</a></li>
+  <li><a href="#other-resources" id="toc-other-resources" class="nav-link" data-scroll-target="#other-resources">Other resources</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="The-caret_package.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">The caret package</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Esteban Vegas </p>
+             <p>Ferran Reverter </p>
+             <p>Alex Sanchez </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 25, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-1_1fc9951d029b5dcee95de6e8b0bd0678">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">width=</span><span class="dv">100</span>) </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">"knitr"</span>)) <span class="fu">install.packages</span>(<span class="st">"knitr"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"knitr"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#getOption("width")</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">comment=</span><span class="cn">NA</span>,<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">cache=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="introduction-to-caret" class="level1">
+<h1>Introduction to <code>caret</code></h1>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-2_b8a0e506a014efaa757fcd95a2d27820">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">"caret"</span>)) <span class="fu">install.packages</span>(<span class="st">"caret"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">"mlbench"</span>)) <span class="fu">install.packages</span>(<span class="st">"mlbench"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"caret"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>caret</code> package, short for classification and regression training, was built with several goals in mind:</p>
+<ul>
+<li>Create a unified interface for modelling and prediction (interfaces to more than 200 models),</li>
+<li>Develop a set of semi-automated, reasonable approaches for optimizing the values of the tuning parameters for many of these models and</li>
+<li>Increase computational efficiency using parallel processing.</li>
+</ul>
+<p>That is <code>caret</code> has been developed to facilitate building, evaluating and comparing predictive models and as such it is an interesting alternative to using multiple different packages for distinct tasks, which, not only requires more time to learn how to use each of them, but especially makes it much harder to compare them.</p>
+<section id="learning-to-use-caret" class="level2">
+<h2 class="anchored" data-anchor-id="learning-to-use-caret">Learning to use <code>caret</code></h2>
+<p>There are multiple resources to learn <code>caret</code>that go from simple tutorials like this one or similars to courses, papers and a book by Max Kuhn, the creator or the package.</p>
+</section>
+</section>
+<section id="guiding-example" class="level1">
+<h1>Guiding example</h1>
+<ul>
+<li><p>The <code>caret</code> package can be used to perform a study from beginning to end.</p></li>
+<li><p>For this, it implements a set of general functions that can roughly be associated with the distinct steps of an analytical pipeline.</p></li>
+<li><p>We follow an example based on the <code>sonar data</code> from the <code>mlbench</code> package to illustrate the multiple functionalities of the package .</p></li>
+</ul>
+<p>The goal is to predict two classes:</p>
+<ul>
+<li>M for metal cylinder</li>
+<li>R for rock</li>
+</ul>
+<section id="data-loading" class="level2">
+<h2 class="anchored" data-anchor-id="data-loading">Data loading</h2>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-3_84513b816f642afa9b68e237d9368208">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"mlbench"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(Sonar)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Sonar)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "V1"    "V2"    "V3"    "V4"    "V5"    "V6"    "V7"    "V8"    "V9"    "V10"   "V11"   "V12"  
+[13] "V13"   "V14"   "V15"   "V16"   "V17"   "V18"   "V19"   "V20"   "V21"   "V22"   "V23"   "V24"  
+[25] "V25"   "V26"   "V27"   "V28"   "V29"   "V30"   "V31"   "V32"   "V33"   "V34"   "V35"   "V36"  
+[37] "V37"   "V38"   "V39"   "V40"   "V41"   "V42"   "V43"   "V44"   "V45"   "V46"   "V47"   "V48"  
+[49] "V49"   "V50"   "V51"   "V52"   "V53"   "V54"   "V55"   "V56"   "V57"   "V58"   "V59"   "V60"  
+[61] "Class"</code></pre>
+</div>
+</div>
+<p>The <code>sonar</code>package has 208 data points collected on 60 predictors (energy within a particular frequency band).</p>
+</section>
+<section id="traintest-splitting" class="level2">
+<h2 class="anchored" data-anchor-id="traintest-splitting">Train/test splitting</h2>
+<p>We will most of the time want to split the data into two groups: a training set and a test set.</p>
+<p>This may be done with the <code>createDataPartition</code> function:</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-4_01eb86c2e3ae6de505550179eef941ae">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>) <span class="co"># Control of data generation</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>inTrain <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(<span class="at">y=</span>Sonar<span class="sc">$</span>Class, <span class="at">p=</span>.<span class="dv">75</span>, <span class="at">list=</span><span class="cn">FALSE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(inTrain)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> int [1:157, 1] 2 3 4 6 7 8 9 11 14 15 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : NULL
+  ..$ : chr "Resample1"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>training <span class="ot">&lt;-</span> Sonar[inTrain,]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>testing <span class="ot">&lt;-</span> Sonar[<span class="sc">-</span>inTrain,]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(training)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 157</code></pre>
+</div>
+</div>
+<p>Others similar functions are: <code>createFolds</code> and <code>createResample</code>,</p>
+</section>
+<section id="preprocessing-and-training" class="level2">
+<h2 class="anchored" data-anchor-id="preprocessing-and-training">Preprocessing and training</h2>
+<p>Usually, before prediction, data may have to be cleaned and pre-processed.</p>
+<p>Caret allows to integrate it with the training step using the <code>train</code> function.</p>
+<p>This function has multiple parameter such as:</p>
+<ul>
+<li>method: Can choose from more than 200 models</li>
+<li>preprocess: all type of filtering and transformations</li>
+</ul>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-5_ba62566d5f957f365eb92dfad2c573fe">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>CART1Model <span class="ot">&lt;-</span> <span class="fu">train</span> (Class <span class="sc">~</span> ., </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data=</span>training, </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method=</span><span class="st">"rpart1SE"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">preProc=</span><span class="fu">c</span>(<span class="st">"center"</span>,<span class="st">"scale"</span>))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>CART1Model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CART 
+
+157 samples
+ 60 predictor
+  2 classes: 'M', 'R' 
+
+Pre-processing: centered (60), scaled (60) 
+Resampling: Bootstrapped (25 reps) 
+Summary of sample sizes: 157, 157, 157, 157, 157, 157, ... 
+Resampling results:
+
+  Accuracy   Kappa   
+  0.6752493  0.350363</code></pre>
+</div>
+</div>
+<section id="refining-specifications" class="level3">
+<h3 class="anchored" data-anchor-id="refining-specifications">Refining specifications</h3>
+<p>Many specifications can be passed using the <code>trainControl</code> instruction.</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-6_fddef3bb0556e103f428043b1ae54bc8">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"repeatedcv"</span>, <span class="at">repeats=</span><span class="dv">3</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>CART1Model3x10cv <span class="ot">&lt;-</span> <span class="fu">train</span> (Class <span class="sc">~</span> ., </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                         <span class="at">data=</span>training, </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method=</span><span class="st">"rpart1SE"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                         <span class="at">trControl=</span>ctrl,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">preProc=</span><span class="fu">c</span>(<span class="st">"center"</span>,<span class="st">"scale"</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>CART1Model3x10cv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CART 
+
+157 samples
+ 60 predictor
+  2 classes: 'M', 'R' 
+
+Pre-processing: centered (60), scaled (60) 
+Resampling: Cross-Validated (10 fold, repeated 3 times) 
+Summary of sample sizes: 141, 142, 142, 141, 141, 142, ... 
+Resampling results:
+
+  Accuracy   Kappa    
+  0.7087173  0.4168066</code></pre>
+</div>
+</div>
+<p>We can change the method used by changing the <code>trainControl</code> parameter.</p>
+<p>In the example below we fit a classification tree with different options:</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-7_4813b18f568c42f6626f05b3ff184bf6">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"repeatedcv"</span>, <span class="at">repeats=</span><span class="dv">3</span>,</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">classProbs=</span><span class="cn">TRUE</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">summaryFunction=</span>twoClassSummary)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>CART1Model3x10cv <span class="ot">&lt;-</span> <span class="fu">train</span> (Class <span class="sc">~</span> ., </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">data=</span>training, </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">method=</span><span class="st">"rpart1SE"</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">trControl=</span>ctrl, </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">metric=</span><span class="st">"ROC"</span>, </span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">preProc=</span><span class="fu">c</span>(<span class="st">"center"</span>,<span class="st">"scale"</span>))</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>CART1Model3x10cv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CART 
+
+157 samples
+ 60 predictor
+  2 classes: 'M', 'R' 
+
+Pre-processing: centered (60), scaled (60) 
+Resampling: Cross-Validated (10 fold, repeated 3 times) 
+Summary of sample sizes: 141, 141, 142, 141, 141, 142, ... 
+Resampling results:
+
+  ROC        Sens   Spec     
+  0.7757068  0.775  0.6869048</code></pre>
+</div>
+</div>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-8_078698329f36bf6f16112dff4ea18a68">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>CART2Fit3x10cv <span class="ot">&lt;-</span> <span class="fu">train</span> (Class <span class="sc">~</span> ., </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data=</span>training, </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">method=</span><span class="st">"rpart"</span>, </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">trControl=</span>ctrl, </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">metric=</span><span class="st">"ROC"</span>, </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">preProc=</span><span class="fu">c</span>(<span class="st">"center"</span>,<span class="st">"scale"</span>))</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>CART2Fit3x10cv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CART 
+
+157 samples
+ 60 predictor
+  2 classes: 'M', 'R' 
+
+Pre-processing: centered (60), scaled (60) 
+Resampling: Cross-Validated (10 fold, repeated 3 times) 
+Summary of sample sizes: 142, 142, 142, 142, 142, 140, ... 
+Resampling results across tuning parameters:
+
+  cp          ROC        Sens       Spec     
+  0.06849315  0.7033441  0.6851852  0.6779762
+  0.10958904  0.6829282  0.7523148  0.5922619
+  0.47945205  0.5517196  0.8629630  0.2404762
+
+ROC was used to select the optimal model using the largest value.
+The final value used for the model was cp = 0.06849315.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(CART2Fit3x10cv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="The-caret_package_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-9_4cc023523ecf8b9f4cf7d11a284201de">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>CART2Fit3x10cv <span class="ot">&lt;-</span> <span class="fu">train</span> (Class <span class="sc">~</span> ., </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data=</span>training, </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">method=</span><span class="st">"rpart"</span>, </span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">trControl=</span>ctrl, </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                       <span class="at">metric=</span><span class="st">"ROC"</span>,  </span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">tuneLength=</span><span class="dv">10</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">preProc=</span><span class="fu">c</span>(<span class="st">"center"</span>,<span class="st">"scale"</span>))</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>CART2Fit3x10cv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CART 
+
+157 samples
+ 60 predictor
+  2 classes: 'M', 'R' 
+
+Pre-processing: centered (60), scaled (60) 
+Resampling: Cross-Validated (10 fold, repeated 3 times) 
+Summary of sample sizes: 141, 142, 140, 141, 141, 142, ... 
+Resampling results across tuning parameters:
+
+  cp          ROC        Sens       Spec     
+  0.00000000  0.7375744  0.7305556  0.6220238
+  0.05327245  0.7382523  0.7453704  0.6130952
+  0.10654490  0.6816468  0.7773148  0.5696429
+  0.15981735  0.6787368  0.8092593  0.5482143
+  0.21308980  0.6787368  0.8092593  0.5482143
+  0.26636225  0.6787368  0.8092593  0.5482143
+  0.31963470  0.6787368  0.8092593  0.5482143
+  0.37290715  0.6787368  0.8092593  0.5482143
+  0.42617960  0.6787368  0.8092593  0.5482143
+  0.47945205  0.5748016  0.8680556  0.2815476
+
+ROC was used to select the optimal model using the largest value.
+The final value used for the model was cp = 0.05327245.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(CART2Fit3x10cv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="The-caret_package_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="predict-confusionmatrix-functions" class="level2">
+<h2 class="anchored" data-anchor-id="predict-confusionmatrix-functions">Predict &amp; confusionMatrix functions</h2>
+<p>To predict new samples can be used predict function.</p>
+<ul>
+<li>type = prob : to compute class probabilities</li>
+<li>type = raw : to predict the class</li>
+</ul>
+<p>The <code>confusionMatrix</code> function will compute the confusion matrix and associated statistics for the model fit.</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-10_88747fc322b1d63a8b663c2a3b241396">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>CART2Probs <span class="ot">&lt;-</span> <span class="fu">predict</span>(CART2Fit3x10cv, <span class="at">newdata =</span> testing, <span class="at">type =</span> <span class="st">"prob"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>CART2Classes <span class="ot">&lt;-</span> <span class="fu">predict</span>(CART2Fit3x10cv, <span class="at">newdata =</span> testing, <span class="at">type =</span> <span class="st">"raw"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(<span class="at">data=</span>CART2Classes,testing<span class="sc">$</span>Class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction  M  R
+         M 21  5
+         R  6 19
+                                          
+               Accuracy : 0.7843          
+                 95% CI : (0.6468, 0.8871)
+    No Information Rate : 0.5294          
+    P-Value [Acc &gt; NIR] : 0.0001502       
+                                          
+                  Kappa : 0.5681          
+                                          
+ Mcnemar's Test P-Value : 1.0000000       
+                                          
+            Sensitivity : 0.7778          
+            Specificity : 0.7917          
+         Pos Pred Value : 0.8077          
+         Neg Pred Value : 0.7600          
+             Prevalence : 0.5294          
+         Detection Rate : 0.4118          
+   Detection Prevalence : 0.5098          
+      Balanced Accuracy : 0.7847          
+                                          
+       'Positive' Class : M               
+                                          </code></pre>
+</div>
+</div>
+</section>
+<section id="model-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="model-comparison">Model comparison</h2>
+<p>The <code>resamples</code>function enable smodel comparison</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-11_e53fe45c203eac226fc0a5a6aec4bc58">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>resamps<span class="ot">=</span><span class="fu">resamples</span>(<span class="fu">list</span>(<span class="at">CART2=</span>CART2Fit3x10cv,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">CART1=</span>CART1Model3x10cv))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(resamps)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+summary.resamples(object = resamps)
+
+Models: CART2, CART1 
+Number of resamples: 30 
+
+ROC 
+           Min.   1st Qu.    Median      Mean   3rd Qu.     Max. NA's
+CART2 0.5000000 0.6294643 0.7455357 0.7382523 0.8058036 0.952381    0
+CART1 0.5535714 0.7249504 0.7926587 0.7757068 0.8315972 0.937500    0
+
+Sens 
+           Min.   1st Qu.    Median      Mean 3rd Qu. Max. NA's
+CART2 0.4444444 0.6250000 0.7500000 0.7453704   0.875    1    0
+CART1 0.4444444 0.6666667 0.7777778 0.7750000   0.875    1    0
+
+Spec 
+       Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+CART2 0.250 0.5714286 0.6250000 0.6130952 0.7142857 0.8750000    0
+CART1 0.375 0.5714286 0.7142857 0.6869048 0.8571429 0.8571429    0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xyplot</span>(resamps,<span class="at">what=</span><span class="st">"BlandAltman"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="The-caret_package_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="768"></p>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>diffs<span class="ot">&lt;-</span><span class="fu">diff</span>(resamps)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(diffs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+summary.diff.resamples(object = diffs)
+
+p-value adjustment: bonferroni 
+Upper diagonal: estimates of the difference
+Lower diagonal: p-value for H0: difference = 0
+
+ROC 
+      CART2  CART1   
+CART2        -0.03745
+CART1 0.1598         
+
+Sens 
+      CART2  CART1   
+CART2        -0.02963
+CART1 0.4514         
+
+Spec 
+      CART2   CART1   
+CART2         -0.07381
+CART1 0.02404         </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="example-comparison-of-boosting-methods" class="level1">
+<h1>Example: Comparison of boosting methods</h1>
+<p>We use the <code>caret</code> package and the <code>BreastCancer</code> dataset.</p>
+<section id="adaboost" class="level2">
+<h2 class="anchored" data-anchor-id="adaboost">Adaboost</h2>
+<p>In this example, we are using the rpart algorithm as the base learner for AdaBoost. We can then use the predict function to make predictions on new data:</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-12_e7b00fce7ddaa4780764425806a83699">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mlbench)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(BreastCancer)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the data into training and testing sets</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>trainIndex <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(BreastCancer<span class="sc">$</span>Class, <span class="at">p =</span> <span class="fl">0.7</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>training <span class="ot">&lt;-</span> BreastCancer[trainIndex, ]</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>testing <span class="ot">&lt;-</span> BreastCancer[<span class="sc">-</span>trainIndex, ]</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Next, set up </span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co"># - the training control and </span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co"># - tuning parameters for the AdaBoost algorithm:</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"repeatedcv"</span>, </span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">number =</span> <span class="dv">10</span>, <span class="at">repeats =</span> <span class="dv">3</span>,</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">classProbs =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>                     <span class="at">summaryFunction =</span> twoClassSummary)</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">method =</span> <span class="st">"AdaBoost"</span>, </span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>                     <span class="at">nIter =</span> <span class="dv">100</span>, </span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>                     <span class="at">interaction.depth =</span> <span class="dv">1</span>, </span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>                     <span class="at">shrinkage =</span> <span class="fl">0.1</span>)</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a><span class="co">#  we are using 10-fold cross-validation with 3 repeats and the twoClassSummary function for evaluation. </span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a><span class="co"># We are also setting the number of iterations for the AdaBoost algorithm to 100, the maximum interaction depth to 1, and the shrinkage factor to 0.1.</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the train function to train the AdaBoost algorithm on the training data and evaluate its performance on the testing data:</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>adaboost <span class="ot">&lt;-</span> <span class="fu">train</span>(Class <span class="sc">~</span> ., <span class="at">data =</span> training, </span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"rpart"</span>, </span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>                  <span class="at">trControl =</span> ctrl, </span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>                  <span class="at">tuneGrid =</span> params)</span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(adaboost, <span class="at">newdata =</span> testing)</span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate the performance of the model</span></span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(predictions, testData<span class="sc">$</span>diagnosis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="gradient-boosting" class="level2">
+<h2 class="anchored" data-anchor-id="gradient-boosting">Gradient boosting</h2>
+<p>We use the <code>gbm</code> method in train() function from the caret package to build a Gradient Boosting model on the Breast Cancer dataset.</p>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-13_b2bba336aabf0a16fe48304f98cc3f06">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gbm)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(BreastCancer)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert the diagnosis column to a binary factor</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>BreastCancer<span class="sc">$</span>diagnosis <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(BreastCancer<span class="sc">$</span>diagnosis <span class="sc">==</span> <span class="st">"M"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the dataset into training and testing sets</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>trainIndex <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(BreastCancer<span class="sc">$</span>diagnosis, <span class="at">p =</span> <span class="fl">0.7</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>trainData <span class="ot">&lt;-</span> BreastCancer[trainIndex, ]</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>testData <span class="ot">&lt;-</span> BreastCancer[<span class="sc">-</span>trainIndex, ]</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the training control</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"cv"</span>, <span class="at">number =</span> <span class="dv">10</span>, <span class="at">classProbs =</span> <span class="cn">TRUE</span>, <span class="at">summaryFunction =</span> twoClassSummary)</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the Gradient Boosting model</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">train</span>(diagnosis <span class="sc">~</span> ., <span class="at">data =</span> trainData, <span class="at">method =</span> <span class="st">"gbm"</span>, <span class="at">trControl =</span> ctrl,</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">verbose =</span> <span class="cn">FALSE</span>, <span class="at">metric =</span> <span class="st">"ROC"</span>, <span class="at">n.trees =</span> <span class="dv">1000</span>, <span class="at">interaction.depth =</span> <span class="dv">3</span>, <span class="at">shrinkage =</span> <span class="fl">0.01</span>)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Make predictions on the testing set</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, testData)</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate the performance of the model</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(predictions, testData<span class="sc">$</span>diagnosis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="xgboost" class="level2">
+<h2 class="anchored" data-anchor-id="xgboost">XGBoost</h2>
+<ul>
+<li><p>In this example, we use the <code>xgbTree</code> method in <code>train()</code> function from the caret package to build an <code>XGBoost</code> model on the <code>BreastCancer</code> dataset.</p></li>
+<li><p>The hyperparameters are set to default values, except for parameters:</p>
+<ul>
+<li>nrounds,</li>
+<li>max_depth,</li>
+<li>eta, lambda, and</li>
+<li>alpha</li>
+</ul></li>
+<li><p>The final performance is evaluated using a confusion matrix.</p></li>
+</ul>
+<div class="cell" data-hash="The-caret_package_cache/html/unnamed-chunk-14_f0352b0ca65059c3ed5f50e35682c1cb">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(BreastCancer)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert the diagnosis column to a binary factor</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>BreastCancer<span class="sc">$</span>diagnosis <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(BreastCancer<span class="sc">$</span>diagnosis <span class="sc">==</span> <span class="st">"M"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the dataset into training and testing sets</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>trainIndex <span class="ot">&lt;-</span> <span class="fu">createDataPartition</span>(BreastCancer<span class="sc">$</span>diagnosis, <span class="at">p =</span> <span class="fl">0.7</span>, <span class="at">list =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>trainData <span class="ot">&lt;-</span> BreastCancer[trainIndex, ]</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>testData <span class="ot">&lt;-</span> BreastCancer[<span class="sc">-</span>trainIndex, ]</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the training control</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method =</span> <span class="st">"cv"</span>, <span class="at">number =</span> <span class="dv">10</span>, <span class="at">classProbs =</span> <span class="cn">TRUE</span>, <span class="at">summaryFunction =</span> twoClassSummary)</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the XGBoost model</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">train</span>(diagnosis <span class="sc">~</span> ., </span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> trainData, </span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">method =</span> <span class="st">"xgbTree"</span>, <span class="at">trControl =</span> ctrl,</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">verbose =</span> <span class="cn">FALSE</span>, <span class="at">metric =</span> <span class="st">"ROC"</span>, </span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>               <span class="at">nrounds =</span> <span class="dv">1000</span>, <span class="at">max_depth =</span> <span class="dv">3</span>, </span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">eta =</span> <span class="fl">0.01</span>, <span class="at">lambda =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="dv">0</span>)</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Make predictions on the testing set</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(model, testData)</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate the performance of the model</span></span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(predictions, testData<span class="sc">$</span>diagnosis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<section id="official-references-and-resources" class="level3">
+<h3 class="anchored" data-anchor-id="official-references-and-resources">Official references and resources</h3>
+<ul>
+<li><a href="https://static1.squarespace.com/static/51156277e4b0b8b2ffe11c00/t/53ad86e5e4b0b52e4e71cfab/1403881189332/Applied_Predictive_Modeling_in_R.pdf">Caret tutorial at UseR! 2014</a></li>
+<li><a href="https://topepo.github.io/caret/index.html">The <code>caret</code> package</a></li>
+<li><a href="http://www.jstatsoft.org/v28/i05/paper">JSS Paper</a></li>
+<li><a href="http://appliedpredictivemodeling.com/">Applied Predictive Modeling Blog</a></li>
+<li><a href="https://www.rstudio.com/resources/cheatsheets/">Caret cheatsheet in Rstudio cheatsheet page</a></li>
+</ul>
+</section>
+<section id="other-resources" class="level3">
+<h3 class="anchored" data-anchor-id="other-resources">Other resources</h3>
+<ul>
+<li><a href="https://www.machinelearningplus.com/machine-learning/caret-package/">Caret Package – A Practical Guide to Machine Learning in R</a> -<a href="https://towardsdatascience.com/create-predictive-models-in-r-with-caret-12baf9941236">Create predictive models in R with Caret</a></li>
+<li><a href="https://machinelearningmastery.com/caret-r-package-for-applied-predictive-modeling/">Caret R Package for Applied Predictive Modeling</a></li>
+</ul>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

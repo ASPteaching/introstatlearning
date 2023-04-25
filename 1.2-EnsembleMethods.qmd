@@ -19,14 +19,13 @@ format:
     css: "css4CU.css"
     theme: sky
     self-contained: true
-    embed-resources: true
+#    embed-resources: true
     self-contained-math: true
 #    suppress-bibliography: true
 bibliography: "StatisticalLearning.bib"
 editor_options: 
   chunk_output_type: console
 ---
-
 
 # Introduction to Ensembles
 
@@ -36,7 +35,7 @@ editor_options:
   - Smaller accuracy than competing alternatives
   - Very sensitive to small changes in data
   - Overall it makes the highly variable predictors
-- Tree are not the only classifers to suffer from such problems.
+- Tree are not the only classifiers to suffer from such problems.
 
 
 ## Ensembles
@@ -64,7 +63,7 @@ editor_options:
 - Decision trees suffer from high variance when compared with other methods such as linear regression, especially when $n/p$ is moderately large.
   - *NOTE: Write a small script to check this assertion*
   
-- Given that high variance is intrinsec to the trees a possibility, suggested by Breimann [@Breiman1996], is to build multiple trees derived from the same dataset and, somehow, average them.
+- Given that high variance is intrinsic to the trees a possibility, suggested by Breimann [@Breiman1996], is to build multiple trees derived from the same dataset and, somehow, average them.
 
 ## Averaging decreases variance
 
@@ -315,7 +314,7 @@ $$
 
 ## Out-Of-Bag observations
 
-- Every time a resample is taken *with replacement*, some observations are ommitted, due to the multiple occurring of others.
+- Every time a resample is taken *with replacement*, some observations are omitted, due to the multiple occurring of others.
 
 
 ```{r, fig.align='center', out.width="100%"}
@@ -347,7 +346,7 @@ knitr::include_graphics("images/oobErrorEstimation.png")
 
 ## Bagging in R (1.1)
 
-- This exampe relies on the well-known `AmesHousing` dataset on house prices in Ames, IA.
+- This example relies on the well-known `AmesHousing` dataset on house prices in Ames, IA.
 
 - We use libraries:
   - `rpart` for stratified resampling
@@ -497,7 +496,7 @@ ames_rf1 <- ranger(
 
 ## Tuning hyperparameters
 
-There are several parametres that, appropriately tuned, can improve RF performance.
+There are several parameters that, appropriately tuned, can improve RF performance.
 
 1. The number of trees in the forest.
 2. The number of features to consider at any given split ($m_{try}$).
@@ -517,10 +516,230 @@ There are several parametres that, appropriately tuned, can improve RF performan
 
 ## Application of Random forests
 
-- Random forests provide robust classifers for instance for
+- Random forests provide robust classifiers for instance for
   - Distinguishing cancer from non cancer
   - Predicting tumor type in cancer of unknown origin
   - Selecting variables (SNPs) in Genome Wide Association Studies
 - Some variation of Random forests are used only for variable selection
 
+# Boosting
+
+## Another ensemble approach
+
+- The idea of *improving weak learners by aggregation* has moved historically along two distinct lines:
+
+  - Build many similar learners (trees) on resamples obtained from the original sample and, somehow, average their predictions.
+    - This entails *Bagging* and *Random Forests*
+  - Build a learner (tree) progressively, improving it at every step using weak learners, until the desired /maximal possible quality is obtained.
+    - This is what *Boosting* is about.
+
+## Bagging vs Boosting
+
+:::: {.columns}
+
+::: {.column width='50%'}
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/baggingVsboosting1.png")
+```
+
+:::
+
+::: {.fragment}
+::: {.column width='50%'}
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/baggingVsboosting2.png")
+```
+
+:::
+:::
+
+::::
+
+## So what is Boosting
+
+<!-- - Boosting is an ensemble learning technique used in ML for improving the accuracy of *weak learners*. -->
+
+- Idea: create a model that is better than any of its individual components by combining their strengths and compensating for their weaknesses.
+
+- For this, multiple weak models are *trained sequentially*, and each new model is trained to improve the errors made by the previous model. 
+
+- The final model is a weighted combination of all the models, and the weights are determined by the accuracy of each model. 
+
+<!-- - Boosting can be applied to various machine learning algorithms, including decision trees, neural networks, and support vector machines. -->
+
+## Historical background
+
+- Introduced by Robert Schapire [@Schapire89] and Yoav Freund in the 1990s . 
+- AdaBoost algorithm became the first widely-used Boosting algorithm
+- It achieved significant success in various applications, including *face detection* and *handwriting recognition*. 
+- Since then, several other Boosting algorithms have been developed, including: *Gradient Boosting*, *XGBoost*, and *LightGBM*. 
+
+## Advantages of Boosting
+
+- Boosting, like other Ensemble methods, improves the accuracy of weak learners and achieve better predictive performance than individual models.
+
+- Boosting also reduces overfitting by improving the generalization ability of models. 
+
+- Available in many flavors, 
+
+- Can be parallelized
+
+- Strong experience in Real world applications and industry.
+
+## Limitations of Boosting
+
+- Can be computationally expensive, especially when dealing with large datasets and complex models. 
+
+- Can be sensitive to noisy data and outliers, 
+
+- May not work well with certain types of data distributions. 
+
+- Not so good as "out-of-the-box": Requires careful tuning of hyperparameters to achieve optimal performance, which can be time-consuming and challenging.
+
+## Adaboost
+
+- AdaBoost (Adaptive Boosting) combines multiple weak classifiers into a strong classifier. 
+- It does so by, at each iteration:
+  - Train weak classifiers on the dataset and
+  - Assign higher weights to misclassified samples.
+- This way, subsequent classifiers focus more on  samples that were previously miss-classified, and
+- The accuracy of the ensemble classifier will increase. 
+
+::: {.notes}
+- AdaBoost implements a vector of weights to penalize those samples that were incorrectly inferred (by increasing the weight) and reward those that were correctly inferred (by decreasing the weight). 
+  - Updating this weight vector will generate a distribution where it will be more likely to extract those samples with higher weight (that is, *those that were incorrectly inferred*), 
+  - This sample will be introduced to the next base learner in the sequence and 
+  - This will be repeated until a stop criterion is met. 
+  - Likewise, each base learner in the sequence will have assigned a weight, the higher the performance, the higher the weight and the greater the impact of this base learner for the final decision. 
+  - Finally, to make a prediction, 
+      - each base learner in the sequence will be fed with the test data, 
+      - each of the predictions of each model will be voted (for the classification case) or averaged (for the regression case)
+:::
+
+## Adaboost Architecture
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/adaboost.png")
+```
+
+## Adaboost pseudo-code{.smaller}
+
+1. Initialize the sample weights: $w_i = 1/N$, where $N$ is the number of training samples.
+2. For each iteration $t=1,2,\dots,T$ do:
+
+  a. Train a weak classifier $h_t(x)$ on the training set weighted by $w_i$.
+  b. Compute the weighted error rate: $\epsilon_t = \sum_{i=1}^N w_i I(y_i \neq h_t(x_i))$, where $I$ is the indicator function.
+  c. Compute the classifier weight: $\alpha_t = \frac{1}{2}\log\frac{1-\epsilon_t}{\epsilon_t}$.
+  d. Update the sample weights: $w_i \leftarrow w_i \exp(-\alpha_t y_i h_t(x_i))$.
+  e. Normalize the sample weights: $w_i \leftarrow \frac{w_i}{\sum_{j=1}^N w_j}$.
+  
+3. Output the final classifier: $H(x) = \text{sign}\left(\sum_{t=1}^T \alpha_t h_t(x)\right)$.
+
+
+## Adaboost applications
+
+- AdaBoost was sucessfully used in face recognition. 
+- Here, the task is to identify whether an image contains a face or not. 
+- AdaBoost can be used to train a classifier on a set of face images and a set of non-face images. 
+- The weak classifier can be a decision stump that checks whether a specific feature is present in the image or not. 
+- AdaBoost will then iteratively train weak classifiers and assign higher weights to misclassified samples, leading to a stronger ensemble classifier. 
+- The resulting classifier can then be used to detect faces in new images with high accuracy.
+
+## Adaboost has limitations
+
+- Adaboost was a breakthrough algorithm that significantly improved the accuracy of ML models. 
+- However, Adaboost has its limitations. 
+  - It does not handle continuous variables very well. 
+  - Can be sensitive to noisy data and outliers,
+  - May not perform well with complex datasets. Moreover, 
+  - Its performance can plateau, meaning it will no longer improve after a certain number of iterations.
+
+
+## Gradient Boosting
+
+- Developed to overcome the limitations of Adaboost.
+- Takes a different approach that can be linked with Optimization by Gradient Descent.
+- Several advantages over Adaboost
+  - Can handle continuous variables much better,
+  - It is more robust to noisy data and outliers.
+  - Can handle complex datasets and 
+  - Can continue to improve its accuracy even after Adaboost's performance has "plateaued".
+  
+## Gradient boosting algorithm
+
+The main steps in Gradient Boosting are:
+
+1. Initialize the model with a single leaf
+2. Train a new weak model (e.g. decision tree) on the *residual errors* of the previous model
+3. Add the new model to the ensemble by weighting it with a learning rate (a value between 0 and 1)
+
+Repeat steps 2-3 for a specified number of iterations or until convergence.
+
+## Gradient boosting architechture
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/gradientboosting.png")
+```
+  
+## Gradient Boosting pseudo-code{.smaller}
+
+1. Initialize the model with a constant value:
+    $f_0(x) = \frac{1}{n} \sum\limits_{i=1}^{n} y_i$
+2. For $t = 1$ to $T$:
+    a. Compute the negative gradient of the loss function at the current fit:
+        $r_{ti} = -\frac{\partial L(y_i, f_{t-1}(x_i))}{\partial f_{t-1}(x_i)}$
+    b. Train a new model to predict the negative gradient values:
+        $h(x; \theta_t) = \arg\min\limits_{h} \sum\limits_{i=1}^{n} (r_{ti} - h(x_i; \theta))^2$
+    c. Compute the optimal step size:
+        $\gamma_t = \arg\min\limits_{\gamma} \sum\limits_{i=1}^{n} L(y_i, f_{t-1}(x_i) + \gamma h(x_i; \theta_t))$
+    d. Update the model:
+        $f_t(x) = f_{t-1}(x) + \gamma_t h(x; \theta_t)$
+3. Output the final model:
+    $F(x) = f_T(x)$
+    
+## Relation with *Gradient Descent*
+
+- Gradient Boosting can be seen as an extension of Gradient Descent, a popular optimization algorithm used to find the minimum of a function. 
+  - In Gradient Descent, the weights of the model are updated in the opposite direction of the gradient of the cost function. 
+  - In Gradient Boosting, the new model is trained on the negative gradient of the loss function, which is equivalent to minimizing the loss function in the direction of steepest descent.
+
+## Gradient Descent Variations
+
+- Multiple extensions from Gradient Boosting.
+
+- **XGBoost**
+  - Optimized implementation that uses regularization to control overfitting and provide better accuracy.
+  - Won many competitions.
+
+- **LightGBM**
+  - Relies on a technique to reduce the number of samples used in each iteration.
+  - Faster training, good for large datasets.
+
+## Boosting applications
+
+- Fraud Detection
+
+- Image and Speech Recognition
+
+- Anomaly Detection
+
+- Medical Diagnosis
+
+- Amazon's recommendation engine
+
+- Models that predict protein structures from amino acid sequences
+
+- Pattern identification in fMRI brain scans. 
+
+## Boosting application with R
+
+- Many packages implement the many variations of boosting:
+  - [ada](https://cran.r-project.org/web/packages/ada), [adabag](https://cran.r-project.org/web/packages/ada), [mboost](https://cran.r-project.org/web/packages/mboost), [gbm](https://cran.r-project.org/web/packages/gbm), [xgboost](https://github.com/dmlc/xgboost/tree/master/R-package)
+
+- An interesting option is to rely on the [caret](https://cran.r-project.org/web/packages/caret/index.html) package which allows to run the distinct methods with a common interface.
+
+
+  
 ## References

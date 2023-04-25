@@ -1,0 +1,359 @@
+---
+title: "The caret package"
+authors:
+- Esteban Vegas
+- Ferran Reverter
+- Alex Sanchez
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 3
+      code-fold: false
+      fig-width: 8
+      fig-height: 6
+    pdf: default
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+reference-location: margin
+execute:
+    echo: true
+    message: false
+    warning: false
+    cache: true
+# bibliography: "../StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+options(width=100) 
+if(!require("knitr")) install.packages("knitr")
+library("knitr")
+#getOption("width")
+knitr::opts_chunk$set(comment=NA,echo = TRUE, cache=TRUE)
+```
+
+# Introduction to `caret`
+
+```{r, include=TRUE, message=FALSE, warning=FALSE}
+if(!require("caret")) install.packages("caret")
+if(!require("mlbench")) install.packages("mlbench")
+library("caret")
+
+```
+
+The `caret` package, short for classification and regression training, was built with several goals in mind:
+
+  - Create a unified interface for modelling and prediction (interfaces to more than 200 models),
+  - Develop a set of semi-automated, reasonable approaches for optimizing the values of the tuning parameters for many of these models and
+  - Increase computational efficiency using parallel processing.
+  
+That is `caret` has been developed to facilitate building, evaluating and comparing predictive models and as such it is an interesting alternative to using multiple different packages for distinct tasks, which, not only requires more time to learn how to use each of them, but especially makes it much harder to compare them.
+
+## Learning to use `caret`
+
+There are multiple resources to learn `caret `that go from simple tutorials like this one or similars to courses, papers and a book by Max Kuhn, the creator or the package.
+
+
+# Guiding example
+
+- The `caret` package can be used to perform a study from beginning to end.
+- For this, it implements a set of general functions that can roughly be associated with the distinct steps of an analytical pipeline.
+
+- We follow an example based on the `sonar data` from the `mlbench`  package to illustrate the multiple functionalities of the package .
+
+The goal is to predict two classes:
+
+- M for metal cylinder
+- R for rock
+
+## Data loading
+
+```{r}
+library("mlbench")
+data(Sonar)
+names(Sonar)
+```
+
+The `sonar`package has 208 data points collected on 60 predictors (energy within a particular frequency band).
+
+## Train/test splitting
+
+We will most of the time want to split the data into two groups: a training set and a test set. 
+
+This may be done with the `createDataPartition` function:
+
+```{r}
+set.seed(1234) # Control of data generation
+inTrain <- createDataPartition(y=Sonar$Class, p=.75, list=FALSE)
+str(inTrain)
+training <- Sonar[inTrain,]
+testing <- Sonar[-inTrain,]
+nrow(training)
+```
+
+Others similar functions are: `createFolds` and  `createResample`,
+
+## Preprocessing and training
+
+Usually, before prediction, data may have to be cleaned and pre-processed.
+
+Caret allows to integrate it with the training step using the `train` function.
+
+This function has multiple parameter such as:
+
+- method: Can choose from more than 200 models
+- preprocess: all type of filtering and transformations
+
+```{r}
+CART1Model <- train (Class ~ ., 
+                   data=training, 
+                   method="rpart1SE",
+                   preProc=c("center","scale"))
+CART1Model
+```
+
+### Refining specifications
+
+Many specifications can be passed using the `trainControl` instruction.
+
+```{r}
+ctrl <- trainControl(method = "repeatedcv", repeats=3)
+CART1Model3x10cv <- train (Class ~ ., 
+                         data=training, 
+                         method="rpart1SE",
+                         trControl=ctrl,
+                         preProc=c("center","scale"))
+
+CART1Model3x10cv
+```
+
+We can change the method used by changing the `trainControl` parameter.
+
+In the example below we fit a classification tree with different options:
+
+```{r}
+ctrl <- trainControl(method = "repeatedcv", repeats=3,
+                     classProbs=TRUE,
+                     summaryFunction=twoClassSummary)
+
+CART1Model3x10cv <- train (Class ~ ., 
+                         data=training, 
+                         method="rpart1SE", 
+                         trControl=ctrl, 
+                         metric="ROC", 
+                         preProc=c("center","scale"))
+
+CART1Model3x10cv
+```
+
+
+```{r}
+CART2Fit3x10cv <- train (Class ~ ., 
+                       data=training, 
+                       method="rpart", 
+                       trControl=ctrl, 
+                       metric="ROC", 
+                       preProc=c("center","scale"))
+CART2Fit3x10cv
+plot(CART2Fit3x10cv)
+```
+
+
+```{r}
+CART2Fit3x10cv <- train (Class ~ ., 
+                       data=training, 
+                       method="rpart", 
+                       trControl=ctrl, 
+                       metric="ROC",  
+                       tuneLength=10,
+                       preProc=c("center","scale"))
+CART2Fit3x10cv
+plot(CART2Fit3x10cv)
+```
+
+## Predict & confusionMatrix functions
+
+To predict new samples can be used predict function.
+
+- type = prob : to compute class probabilities
+- type = raw : to predict the class
+
+The `confusionMatrix` function will compute the confusion matrix and associated statistics for the model fit.
+
+```{r}
+CART2Probs <- predict(CART2Fit3x10cv, newdata = testing, type = "prob")
+CART2Classes <- predict(CART2Fit3x10cv, newdata = testing, type = "raw")
+confusionMatrix(data=CART2Classes,testing$Class)
+```
+
+## Model comparison
+
+The `resamples`function enable smodel comparison
+
+```{r}
+resamps=resamples(list(CART2=CART2Fit3x10cv,
+                       CART1=CART1Model3x10cv))
+summary(resamps)
+xyplot(resamps,what="BlandAltman")
+diffs<-diff(resamps)
+summary(diffs)
+```
+
+# Example: Comparison of boosting methods
+
+We use the `caret` package and the `BreastCancer` dataset.
+
+## Adaboost
+
+In this example, we are using the rpart algorithm as the base learner for AdaBoost. We can then use the predict function to make predictions on new data:
+
+```{r, eval=FALSE}
+
+library(caret)
+library(mlbench)
+
+data(BreastCancer)
+
+# Split the data into training and testing sets
+set.seed(123)
+trainIndex <- createDataPartition(BreastCancer$Class, p = 0.7, list = FALSE)
+training <- BreastCancer[trainIndex, ]
+testing <- BreastCancer[-trainIndex, ]
+
+# Next, set up 
+# - the training control and 
+# - tuning parameters for the AdaBoost algorithm:
+
+ctrl <- trainControl(method = "repeatedcv", 
+                     number = 10, repeats = 3,
+                     classProbs = TRUE, 
+                     summaryFunction = twoClassSummary)
+
+params <- data.frame(method = "AdaBoost", 
+                     nIter = 100, 
+                     interaction.depth = 1, 
+                     shrinkage = 0.1)
+
+#  we are using 10-fold cross-validation with 3 repeats and the twoClassSummary function for evaluation. 
+# We are also setting the number of iterations for the AdaBoost algorithm to 100, the maximum interaction depth to 1, and the shrinkage factor to 0.1.
+
+# Use the train function to train the AdaBoost algorithm on the training data and evaluate its performance on the testing data:
+
+adaboost <- train(Class ~ ., data = training, 
+                  method = "rpart", 
+                  trControl = ctrl, 
+                  tuneGrid = params)
+
+predictions <- predict(adaboost, newdata = testing)
+
+# Evaluate the performance of the model
+confusionMatrix(predictions, testData$diagnosis)
+```
+
+## Gradient boosting
+
+
+We use the `gbm` method in train() function from the caret package to build a Gradient Boosting model on the Breast Cancer dataset.
+
+
+```{r, eval=FALSE}
+library(caret)
+library(gbm)
+data(BreastCancer)
+
+# Convert the diagnosis column to a binary factor
+BreastCancer$diagnosis <- ifelse(BreastCancer$diagnosis == "M", 1, 0)
+
+# Split the dataset into training and testing sets
+trainIndex <- createDataPartition(BreastCancer$diagnosis, p = 0.7, list = FALSE)
+trainData <- BreastCancer[trainIndex, ]
+testData <- BreastCancer[-trainIndex, ]
+
+# Define the training control
+ctrl <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+# Define the Gradient Boosting model
+model <- train(diagnosis ~ ., data = trainData, method = "gbm", trControl = ctrl,
+               verbose = FALSE, metric = "ROC", n.trees = 1000, interaction.depth = 3, shrinkage = 0.01)
+
+# Make predictions on the testing set
+predictions <- predict(model, testData)
+
+# Evaluate the performance of the model
+confusionMatrix(predictions, testData$diagnosis)
+
+```
+
+## XGBoost
+
+- In this example, we use the `xgbTree` method in `train()` function from the caret package to build an `XGBoost` model on the `BreastCancer` dataset. 
+
+- The hyperparameters are set to default values, except for parameters: 
+  - nrounds, 
+  - max_depth, 
+  - eta, lambda, and 
+  - alpha 
+
+- The final performance is evaluated using a confusion matrix.
+
+```{r, eval=FALSE}
+library(caret)
+library(xgboost)
+data(BreastCancer)
+
+# Convert the diagnosis column to a binary factor
+BreastCancer$diagnosis <- ifelse(BreastCancer$diagnosis == "M", 1, 0)
+
+# Split the dataset into training and testing sets
+trainIndex <- createDataPartition(BreastCancer$diagnosis, p = 0.7, list = FALSE)
+trainData <- BreastCancer[trainIndex, ]
+testData <- BreastCancer[-trainIndex, ]
+
+# Define the training control
+ctrl <- trainControl(method = "cv", number = 10, classProbs = TRUE, summaryFunction = twoClassSummary)
+
+# Define the XGBoost model
+model <- train(diagnosis ~ ., 
+               data = trainData, 
+               method = "xgbTree", trControl = ctrl,
+               verbose = FALSE, metric = "ROC", 
+               nrounds = 1000, max_depth = 3, 
+               eta = 0.01, lambda = 1, alpha = 0)
+
+# Make predictions on the testing set
+predictions <- predict(model, testData)
+
+# Evaluate the performance of the model
+confusionMatrix(predictions, testData$diagnosis)
+```
+
+
+
+## References
+
+### Official references and resources
+
+- [Caret tutorial at UseR! 2014](https://static1.squarespace.com/static/51156277e4b0b8b2ffe11c00/t/53ad86e5e4b0b52e4e71cfab/1403881189332/Applied_Predictive_Modeling_in_R.pdf)
+- [The `caret` package](https://topepo.github.io/caret/index.html)
+- [JSS Paper](http://www.jstatsoft.org/v28/i05/paper)
+- [Applied Predictive Modeling Blog](http://appliedpredictivemodeling.com/)
+- [Caret cheatsheet in Rstudio cheatsheet page](https://www.rstudio.com/resources/cheatsheets/)
+
+### Other resources
+
+- [Caret Package – A Practical Guide to Machine Learning in R](https://www.machinelearningplus.com/machine-learning/caret-package/)
+-[Create predictive models in R with Caret](https://towardsdatascience.com/create-predictive-models-in-r-with-caret-12baf9941236)
+- [Caret R Package for Applied Predictive Modeling](https://machinelearningmastery.com/caret-r-package-for-applied-predictive-modeling/)

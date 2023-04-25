@@ -535,7 +535,7 @@ here's an extended comparison table that includes examples of each task using **
 | **Tuning Hyperparameters**          | **`train(Species ~ ., method = "rpart", data = iris, tuneGrid = expand.grid(cp = c(0.001, 0.01, 0.1)))`** | **`rpart(Species ~ ., data = iris, control = rpart.control(cp = c(0.001, 0.01, 0.1)))`**            |
 | **Visualizing Variable Importance** | **`varImp(fit)`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                                      | **`importance(fit)`**\<br\> **`fit <- rpart(Species ~ ., data = iris)`**                            |
 
-In the examples above, we tried to make the parameters as comparable as possible to
+In the examples above, we tried to make the parameters as comparable as possible but, given that there are many other parameters, it is unlikely that identical results are obtained in most cases.
 
 
 # A case for improvement
