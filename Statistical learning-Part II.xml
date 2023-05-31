@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Usuario</Author>
+  <LastAuthor>Usuario</LastAuthor>
+  <Created>2023-05-31T09:55:40Z</Created>
+  <LastSaved>2023-05-31T15:13:15Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>14880</WindowHeight>
+  <WindowWidth>17100</WindowWidth>
+  <WindowTopX>20595</WindowTopX>
+  <WindowTopY>1920</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16" ss:Name="Hipervínculo">
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#0563C1"
+    ss:Underline="Single"/>
+  </Style>
+  <Style ss:ID="s17">
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Hoja1">
+  <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="15" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="60" ss:DefaultRowHeight="15">
+   <Column ss:Width="193.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="77.25"/>
+   <Column ss:AutoFitWidth="0" ss:Width="69"/>
+   <Column ss:Width="64.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="78"/>
+   <Row ss:Height="15.75">
+    <Cell ss:StyleID="s19"><Data ss:Type="String">STATISTICAL LEARNING PART II</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s17"><Data ss:Type="String">Statistical learning Part II: Presentation</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Statistical learning. Part II.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Statistical Learning. Part II.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+   </Row>
+   <Row ss:Index="4">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">1-Tree based methods</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">1.1. (Single) Tree based methods</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\1.1-Intro2Trees.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\1.1-Intro2Trees.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">1.2 Ensemble Methods</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\1.2-EnsembleMethods.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\1.2-EnsembleMethods.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">lab-1.1-CART-Examples</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\CART-Examples.html"><Data
+      ss:Type="String">Doc (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\CART-Examples.qmd"><Data
+      ss:Type="String">Rmarkdown </Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">lab-1.2-Ensemble-Examples</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\Ensemble-Examples.html"><Data
+      ss:Type="String">Doc (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\Ensemble-Examples.qmd"><Data
+      ss:Type="String">Rmarkdown </Data></Cell>
+   </Row>
+   <Row ss:Index="10">
+    <Cell ss:StyleID="s17"><Data ss:Type="String">2. Artificial neural Networks</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">2.1 Introduction to deep learning</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Introduction_to_Deep_Learning-Slides.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Introduction_to_Deep_Learning-Slides.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Introduction_to_Deep_Learning.html"><Data
+      ss:Type="String">Notes (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\Introduction_to_Deep_Learning.pdf"><Data
+      ss:Type="String">Notes (pdf)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">2.2 Convolutional Neural networks</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\ConvolutionalNN-Slides.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\ConvolutionalNN-Slides.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\ConvolutionalNN.html"><Data
+      ss:Type="String">Notes (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\ConvolutionalNN.pdf"><Data
+      ss:Type="String">Notes (pdf)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">2.3 Keras, Tensors and TFRuns</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\DNNwithKeras_inR.html"><Data
+      ss:Type="String">Slides (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\DNNwithKeras_inR.pdf"><Data
+      ss:Type="String">Slides (pdf)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">lab-2.1-Building DNN with Keras in R</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\Introduction_to_Keras-Lab.html"><Data
+      ss:Type="String">Doc (html)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\Introduction_to_Keras-Lab.qmd"><Data
+      ss:Type="String">Rmarkdown </Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">lab-2.2 CNN with Keras and R</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\CNN_Lab\cnn_cats_and_docs.pdf"><Data
+      ss:Type="String">Doc (pdf)</Data></Cell>
+    <Cell ss:StyleID="s16" ss:HRef="C:\Users\Usuario\Nuevo Equipo VHIR10 Dropbox\Alex al VHIR\Classes\StatisticalLearning\introstatlearning\labs\CNN_Lab\cnn_cats_and_docs.qmd"><Data
+      ss:Type="String">Rmarkdown </Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>18</ActiveRow>
+     <ActiveCol>2</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>

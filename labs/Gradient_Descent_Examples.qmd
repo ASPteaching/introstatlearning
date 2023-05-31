@@ -1,0 +1,96 @@
+---
+title: "Gradient Descent Example - Lab"
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 3
+      code-fold: false
+      fig-width: 8
+      fig-height: 6
+    pdf: default
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+reference-location: margin
+execute:
+    echo: true
+    message: false
+    warning: false
+    cache: true
+bibliography: "../DeepLearning.bib"
+editor_options: 
+  
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+ggplot2::theme_set(ggplot2::theme_minimal())
+workingdir <- paste(here::here(), "labs", sep="/")
+setwd(workingdir)
+```
+
+# An animation of the gradient descent method
+
+To see an animation of the gradient descent algorithm we use the `grad.desc()` function in the `animation` package. See details [in this link](https://yihui.org/animation/example/grad-desc/).
+
+```{r}
+if(!require(animation)) install.packages('animation')
+# or development version
+# remotes::install_github('yihui/animation')
+```
+
+The `grad.desc)` function has the following default arguments:
+
+```{r eval=FALSE}
+grad.desc(
+  FUN = function(x, y) x^2 + 2 * y^2,
+  rg = c(-3, -3, 3, 3),
+  init = c(-3, 3),
+  gamma = 0.05,
+  tol = 0.001,
+  gr = NULL,
+  len = 50,
+  interact = FALSE,
+  col.contour = "red",
+  col.arrow = "blue",
+  main
+)
+```
+
+
+Execution is straightforward:
+
+First the iterations are executed:
+
+```{r}
+library(animation)
+ani.options(interval = 0.5, nmax = 10)
+xx = grad.desc()
+```
+
+Then the results and visualization are available:
+
+```{r}
+cat("The minimum is at: ", xx$par)
+```
+
+```{r}
+xx$persp(col = "lightblue", phi = 30)  # perspective plot
+```
+
+
+
+
+
+
