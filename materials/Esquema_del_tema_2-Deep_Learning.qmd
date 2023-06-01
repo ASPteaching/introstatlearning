@@ -1,0 +1,344 @@
+---
+title: "Introduction to Deep Neural Networks"
+authors:
+- Esteban Vegas
+- Ferran Reverter
+- Alex Sanchez
+date: "`r Sys.Date()`"
+format:
+    html: 
+      toc: true
+      toc-depth: 3
+      code-fold: false
+      fig-width: 8
+      fig-height: 6
+    pdf: default
+knit:
+  quarto:
+    chunk_options:
+      echo: true
+      cache: false
+      prompt: false
+      tidy: true
+      comment: NA
+      message: false
+      warning: false
+    knit_options:
+      width: 75
+reference-location: margin
+execute:
+    echo: true
+    message: false
+    warning: false
+    cache: true
+# bibliography: "../StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+options(width=100) 
+if(!require("knitr")) install.packages("knitr")
+library("knitr")
+#getOption("width")
+knitr::opts_chunk$set(comment=NA,echo = TRUE, cache=TRUE)
+```
+
+# Course overview
+
+## High level outline
+
+Session 1: Introduction to Deep Neural Networks
+
+-   Overview of Deep Learning
+
+-   Artificial Neural Networks
+
+-   Introduction to Deep Neural Networks
+
+-   Advantages and Applications of Deep Learning
+
+Session 2: Backpropagation and Optimization
+
+-   Backpropagation Algorithm
+
+-   Activation Functions
+
+-   Optimization Techniques for Deep Learning
+
+-   Dropout and Batch Normalization
+
+Session 3: Convolutional Neural Networks (CNNs)
+
+-   Convolutional Layers
+
+-   Pooling Layers
+
+-   Building and Training CNNs
+
+-   Transfer Learning
+
+Session 4: Recurrent Neural Networks (RNNs)
+
+-   Basics of RNNs
+
+-   Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) Networks
+
+-   Building and Training RNNs
+
+-   Applications of RNNs
+
+Session 5: Advanced Topics in Deep Learning
+
+-   Autoencoders
+
+-   Generative Adversarial Networks (GANs)
+
+-   Reinforcement Learning
+
+-   Ethical Considerations in Deep Learning
+
+## Low level outline
+
+Session 1: Introduction to Deep Neural Networks
+
+-   Overview of Deep Learning
+
+    -   Historical Background and Key Milestones
+
+    -   Comparison with Traditional Machine Learning
+
+-   Artificial Neural Networks
+
+    -   Neurons and Activation Functions
+
+    -   Layers, Weights, and Biases
+
+-   Introduction to Deep Neural Networks
+
+    -   Deep vs Shallow Networks
+
+    -   Feedforward and Backpropagation
+
+-   Advantages and Applications of Deep Learning
+
+    -   Image and Speech Recognition
+
+    -   Natural Language Processing
+
+    -   Recommender Systems and Anomaly Detection
+
+Session 2: Backpropagation and Optimization
+
+-   Backpropagation Algorithm
+
+    -   Chain Rule and Partial Derivatives
+
+    -   Calculation of Gradients and Updates
+
+-   Activation Functions
+
+    -   Sigmoid, Tanh, ReLU, and Softmax
+
+    -   Vanishing and Exploding Gradients
+
+-   Optimization Techniques for Deep Learning
+
+    -   Gradient Descent, Stochastic Gradient Descent, and Mini-Batch Gradient Descent
+
+    -   Adaptive Learning Rates and Momentum
+
+-   Dropout and Batch Normalization
+
+    -   Regularization Techniques to Prevent Overfitting
+
+    -   Improving Training and Generalization Performance
+
+Session 3: Convolutional Neural Networks (CNNs)
+
+-   Convolutional Layers
+
+    -   Convolution and Padding
+
+    -   Filters, Strides, and Channels
+
+-   Pooling Layers
+
+    -   Max Pooling and Average Pooling
+
+    -   Downsampling and Translation Invariance
+
+-   Building and Training CNNs
+
+    -   Architecture Design and Hyperparameter Tuning
+
+    -   Transfer Learning and Fine-Tuning
+
+-   Applications of CNNs
+
+    -   Object Detection and Segmentation
+
+    -   Image Classification and Captioning
+
+    -   Face Recognition and Style Transfer
+
+Session 4: Recurrent Neural Networks (RNNs)
+
+-   Basics of RNNs
+
+    -   Recurrent Connections and Feedback Loops
+
+    -   Sequence Modeling and Prediction
+
+-   Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) Networks
+
+    -   Memory Cells and Gates
+
+    -   Input, Output, and Forget Gates
+
+-   Building and Training RNNs
+
+    -   Vanishing and Exploding Gradients in RNNs
+
+    -   Bidirectional and Multilayer RNNs
+
+-   Applications of RNNs
+
+    -   Time Series Forecasting and Anomaly Detection
+
+    -   Speech Recognition and Synthesis
+
+    -   Natural Language Understanding and Generation
+
+Session 5: Advanced Topics in Deep Learning
+
+-   Autoencoders
+
+    -   Unsupervised Learning and Representation Learning
+
+    -   Encoder and Decoder Networks
+
+    -   Denoising Autoencoders and Variational Autoencoders
+
+-   Generative Adversarial Networks (GANs)
+
+    -   Game Theory and Adversarial Training
+
+    -   Generator and Discriminator Networks
+
+    -   Conditional GANs and StyleGAN
+
+-   Reinforcement Learning
+
+    -   Markov Decision Processes and Bellman Equations
+
+    -   Q-Learning and Policy Gradient Methods
+
+    -   Deep Reinforcement Learning and AlphaGo
+
+-   Ethical Considerations in Deep Learning
+
+    -   Bias and Fairness in Data and Models
+
+    -   Privacy and Security in Deep Learning Applications
+
+    -   Social Impacts and Responsibilities of Deep Learning Practitioners
+
+## Lab sessions
+
+Session 1: Introduction to Deep Neural Networks
+
+-   Build and train a simple feedforward neural network for a classification or regression problem using Keras
+
+-   Experiment with different activation functions and loss functions
+
+-   Visualize the training process and evaluate the performance of the model on a test set
+
+Session 2: Backpropagation and Optimization
+
+-   Implement the backpropagation algorithm from scratch and compare the results with the Keras implementation
+
+-   Train a deep neural network with different optimization techniques such as SGD, Adam, and Adagrad
+
+-   Apply regularization techniques such as Dropout and Batch Normalization and compare their effects on the model's performance
+
+Session 3: Convolutional Neural Networks (CNNs)
+
+-   Build and train a CNN for image classification using Keras and a pre-trained dataset such as MNIST or CIFAR-10
+
+-   Fine-tune a pre-trained CNN such as VGG or ResNet for a new image classification task
+
+-   Visualize the learned features of the CNN using techniques such as Grad-CAM or t-SNE
+
+Session 4: Recurrent Neural Networks (RNNs)
+
+-   Implement a simple RNN or LSTM for a text classification or sentiment analysis task using Keras
+
+-   Train a language model using an RNN or LSTM and generate text samples
+
+-   Experiment with different types of RNNs such as Bidirectional and Multilayer RNNs and compare their performance
+
+Session 5: Advanced Topics in Deep Learning
+
+-   Build and train an autoencoder for a dimensionality reduction or data compression task using Keras
+
+-   Implement a GAN for image generation or style transfer using Keras and a pre-trained dataset such as CelebA or WikiArt
+
+-   Apply reinforcement learning to a simple game or control problem using Keras and the OpenAI Gym library
+
+-   Discuss ethical considerations in deep learning and analyze a case study or research paper related to bias, fairness, or privacy.
+
+![](data:image/svg+xml,%253csvg%2520xmlns=%2527http://www.w3.org/2000/svg%2527%2520version=%25271.1%2527%2520width=%252738%2527%2520height=%252738%2527/%253e){alt=""}![sanplaale\@gmail.com](https://chat.openai.com/_next/image?url=https%253A%252F%252Fs.gravatar.com%252Favatar%252Fda5e51b4b4e8948b0cd0b6dc880cd5f1%253Fs%253D480%2526r%253Dpg%2526d%253Dhttps%25253A%25252F%25252Fcdn.auth0.com%25252Favatars%25252Fsa.png&w=96&q=75){alt="sanplaale@gmail.com"}
+
+Recommend some teaching materials and references for both theoretical and practical sessions
+
+Certainly! Here are some recommended teaching materials and references for both the theoretical and practical sessions:
+
+Session 1: Introduction to Deep Neural Networks
+
+-   Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press.
+
+-   Chollet, F. (2018). Deep Learning with R. Manning Publications.
+
+-   Keras documentation: [**https://keras.io/**](https://keras.io/)
+
+Session 2: Backpropagation and Optimization
+
+-   Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press.
+
+-   Nielsen, M. (2015). Neural Networks and Deep Learning. Determination Press.
+
+-   Keras documentation: [**https://keras.io/**](https://keras.io/)
+
+Session 3: Convolutional Neural Networks (CNNs)
+
+-   Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press.
+
+-   Chollet, F. (2018). Deep Learning with R. Manning Publications.
+
+-   Keras documentation: [**https://keras.io/**](https://keras.io/)
+
+Session 4: Recurrent Neural Networks (RNNs)
+
+-   Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press.
+
+-   Nielsen, M. (2015). Neural Networks and Deep Learning. Determination Press.
+
+-   Keras documentation: [**https://keras.io/**](https://keras.io/)
+
+Session 5: Advanced Topics in Deep Learning
+
+-   Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press.
+
+-   Chollet, F. (2018). Deep Learning with R. Manning Publications.
+
+-   Keras documentation: [**https://keras.io/**](https://keras.io/)
+
+-   Reinforcement Learning: An Introduction by Sutton and Barto: [**http://incompleteideas.net/book/the-book.html**](http://incompleteideas.net/book/the-book.html)
+
+-   GANs: Ian Goodfellow's original paper: [**https://arxiv.org/abs/1406.2661**](https://arxiv.org/abs/1406.2661)
+
+-   Autoencoders: Francois Chollet's blog post: [**https://blog.keras.io/building-autoencoders-in-keras.html**](https://blog.keras.io/building-autoencoders-in-keras.html)
+
+
+# Introduction to Deep Neural Networks

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.336">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-04-25">
+
+<title>Introduction to Deep Neural Networks</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/quarto.js"></script>
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/popper.min.js"></script>
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Esquema_del_tema_2-Deep_Learning_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Esquema_del_tema_2-Deep_Learning_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Esquema_del_tema_2-Deep_Learning_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Esquema_del_tema_2-Deep_Learning_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction-to-deep-neural-networks" id="toc-introduction-to-deep-neural-networks" class="nav-link active" data-scroll-target="#introduction-to-deep-neural-networks">Introduction to deep Neural Networks</a>
+  <ul class="collapse">
+  <li><a href="#high-level-outline" id="toc-high-level-outline" class="nav-link" data-scroll-target="#high-level-outline">High level outline</a></li>
+  <li><a href="#low-level-outline" id="toc-low-level-outline" class="nav-link" data-scroll-target="#low-level-outline">Low level outline</a></li>
+  <li><a href="#lab-sessions" id="toc-lab-sessions" class="nav-link" data-scroll-target="#lab-sessions">Lab sessions</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="Esquema_del_tema_2-Deep_Learning.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Introduction to Deep Neural Networks</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Esteban Vegas </p>
+             <p>Ferran Reverter </p>
+             <p>Alex Sanchez </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 25, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell" data-hash="Esquema_del_tema_2-Deep_Learning_cache/html/unnamed-chunk-1_fd1d3536dc1664795b00ff798988fd6d">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">width=</span><span class="dv">100</span>) </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">require</span>(<span class="st">"knitr"</span>)) <span class="fu">install.packages</span>(<span class="st">"knitr"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"knitr"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#getOption("width")</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">comment=</span><span class="cn">NA</span>,<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">cache=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="introduction-to-deep-neural-networks" class="level1">
+<h1>Introduction to deep Neural Networks</h1>
+<section id="high-level-outline" class="level2">
+<h2 class="anchored" data-anchor-id="high-level-outline">High level outline</h2>
+<p>Session 1: Introduction to Deep Neural Networks</p>
+<ul>
+<li><p>Overview of Deep Learning</p></li>
+<li><p>Artificial Neural Networks</p></li>
+<li><p>Introduction to Deep Neural Networks</p></li>
+<li><p>Advantages and Applications of Deep Learning</p></li>
+</ul>
+<p>Session 2: Backpropagation and Optimization</p>
+<ul>
+<li><p>Backpropagation Algorithm</p></li>
+<li><p>Activation Functions</p></li>
+<li><p>Optimization Techniques for Deep Learning</p></li>
+<li><p>Dropout and Batch Normalization</p></li>
+</ul>
+<p>Session 3: Convolutional Neural Networks (CNNs)</p>
+<ul>
+<li><p>Convolutional Layers</p></li>
+<li><p>Pooling Layers</p></li>
+<li><p>Building and Training CNNs</p></li>
+<li><p>Transfer Learning</p></li>
+</ul>
+<p>Session 4: Recurrent Neural Networks (RNNs)</p>
+<ul>
+<li><p>Basics of RNNs</p></li>
+<li><p>Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) Networks</p></li>
+<li><p>Building and Training RNNs</p></li>
+<li><p>Applications of RNNs</p></li>
+</ul>
+<p>Session 5: Advanced Topics in Deep Learning</p>
+<ul>
+<li><p>Autoencoders</p></li>
+<li><p>Generative Adversarial Networks (GANs)</p></li>
+<li><p>Reinforcement Learning</p></li>
+<li><p>Ethical Considerations in Deep Learning</p></li>
+</ul>
+</section>
+<section id="low-level-outline" class="level2">
+<h2 class="anchored" data-anchor-id="low-level-outline">Low level outline</h2>
+<p>Session 1: Introduction to Deep Neural Networks</p>
+<ul>
+<li><p>Overview of Deep Learning</p>
+<ul>
+<li><p>Historical Background and Key Milestones</p></li>
+<li><p>Comparison with Traditional Machine Learning</p></li>
+</ul></li>
+<li><p>Artificial Neural Networks</p>
+<ul>
+<li><p>Neurons and Activation Functions</p></li>
+<li><p>Layers, Weights, and Biases</p></li>
+</ul></li>
+<li><p>Introduction to Deep Neural Networks</p>
+<ul>
+<li><p>Deep vs Shallow Networks</p></li>
+<li><p>Feedforward and Backpropagation</p></li>
+</ul></li>
+<li><p>Advantages and Applications of Deep Learning</p>
+<ul>
+<li><p>Image and Speech Recognition</p></li>
+<li><p>Natural Language Processing</p></li>
+<li><p>Recommender Systems and Anomaly Detection</p></li>
+</ul></li>
+</ul>
+<p>Session 2: Backpropagation and Optimization</p>
+<ul>
+<li><p>Backpropagation Algorithm</p>
+<ul>
+<li><p>Chain Rule and Partial Derivatives</p></li>
+<li><p>Calculation of Gradients and Updates</p></li>
+</ul></li>
+<li><p>Activation Functions</p>
+<ul>
+<li><p>Sigmoid, Tanh, ReLU, and Softmax</p></li>
+<li><p>Vanishing and Exploding Gradients</p></li>
+</ul></li>
+<li><p>Optimization Techniques for Deep Learning</p>
+<ul>
+<li><p>Gradient Descent, Stochastic Gradient Descent, and Mini-Batch Gradient Descent</p></li>
+<li><p>Adaptive Learning Rates and Momentum</p></li>
+</ul></li>
+<li><p>Dropout and Batch Normalization</p>
+<ul>
+<li><p>Regularization Techniques to Prevent Overfitting</p></li>
+<li><p>Improving Training and Generalization Performance</p></li>
+</ul></li>
+</ul>
+<p>Session 3: Convolutional Neural Networks (CNNs)</p>
+<ul>
+<li><p>Convolutional Layers</p>
+<ul>
+<li><p>Convolution and Padding</p></li>
+<li><p>Filters, Strides, and Channels</p></li>
+</ul></li>
+<li><p>Pooling Layers</p>
+<ul>
+<li><p>Max Pooling and Average Pooling</p></li>
+<li><p>Downsampling and Translation Invariance</p></li>
+</ul></li>
+<li><p>Building and Training CNNs</p>
+<ul>
+<li><p>Architecture Design and Hyperparameter Tuning</p></li>
+<li><p>Transfer Learning and Fine-Tuning</p></li>
+</ul></li>
+<li><p>Applications of CNNs</p>
+<ul>
+<li><p>Object Detection and Segmentation</p></li>
+<li><p>Image Classification and Captioning</p></li>
+<li><p>Face Recognition and Style Transfer</p></li>
+</ul></li>
+</ul>
+<p>Session 4: Recurrent Neural Networks (RNNs)</p>
+<ul>
+<li><p>Basics of RNNs</p>
+<ul>
+<li><p>Recurrent Connections and Feedback Loops</p></li>
+<li><p>Sequence Modeling and Prediction</p></li>
+</ul></li>
+<li><p>Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) Networks</p>
+<ul>
+<li><p>Memory Cells and Gates</p></li>
+<li><p>Input, Output, and Forget Gates</p></li>
+</ul></li>
+<li><p>Building and Training RNNs</p>
+<ul>
+<li><p>Vanishing and Exploding Gradients in RNNs</p></li>
+<li><p>Bidirectional and Multilayer RNNs</p></li>
+</ul></li>
+<li><p>Applications of RNNs</p>
+<ul>
+<li><p>Time Series Forecasting and Anomaly Detection</p></li>
+<li><p>Speech Recognition and Synthesis</p></li>
+<li><p>Natural Language Understanding and Generation</p></li>
+</ul></li>
+</ul>
+<p>Session 5: Advanced Topics in Deep Learning</p>
+<ul>
+<li><p>Autoencoders</p>
+<ul>
+<li><p>Unsupervised Learning and Representation Learning</p></li>
+<li><p>Encoder and Decoder Networks</p></li>
+<li><p>Denoising Autoencoders and Variational Autoencoders</p></li>
+</ul></li>
+<li><p>Generative Adversarial Networks (GANs)</p>
+<ul>
+<li><p>Game Theory and Adversarial Training</p></li>
+<li><p>Generator and Discriminator Networks</p></li>
+<li><p>Conditional GANs and StyleGAN</p></li>
+</ul></li>
+<li><p>Reinforcement Learning</p>
+<ul>
+<li><p>Markov Decision Processes and Bellman Equations</p></li>
+<li><p>Q-Learning and Policy Gradient Methods</p></li>
+<li><p>Deep Reinforcement Learning and AlphaGo</p></li>
+</ul></li>
+<li><p>Ethical Considerations in Deep Learning</p>
+<ul>
+<li><p>Bias and Fairness in Data and Models</p></li>
+<li><p>Privacy and Security in Deep Learning Applications</p></li>
+<li><p>Social Impacts and Responsibilities of Deep Learning Practitioners</p></li>
+</ul></li>
+</ul>
+</section>
+<section id="lab-sessions" class="level2">
+<h2 class="anchored" data-anchor-id="lab-sessions">Lab sessions</h2>
+<p>Session 1: Introduction to Deep Neural Networks</p>
+<ul>
+<li><p>Build and train a simple feedforward neural network for a classification or regression problem using Keras</p></li>
+<li><p>Experiment with different activation functions and loss functions</p></li>
+<li><p>Visualize the training process and evaluate the performance of the model on a test set</p></li>
+</ul>
+<p>Session 2: Backpropagation and Optimization</p>
+<ul>
+<li><p>Implement the backpropagation algorithm from scratch and compare the results with the Keras implementation</p></li>
+<li><p>Train a deep neural network with different optimization techniques such as SGD, Adam, and Adagrad</p></li>
+<li><p>Apply regularization techniques such as Dropout and Batch Normalization and compare their effects on the model’s performance</p></li>
+</ul>
+<p>Session 3: Convolutional Neural Networks (CNNs)</p>
+<ul>
+<li><p>Build and train a CNN for image classification using Keras and a pre-trained dataset such as MNIST or CIFAR-10</p></li>
+<li><p>Fine-tune a pre-trained CNN such as VGG or ResNet for a new image classification task</p></li>
+<li><p>Visualize the learned features of the CNN using techniques such as Grad-CAM or t-SNE</p></li>
+</ul>
+<p>Session 4: Recurrent Neural Networks (RNNs)</p>
+<ul>
+<li><p>Implement a simple RNN or LSTM for a text classification or sentiment analysis task using Keras</p></li>
+<li><p>Train a language model using an RNN or LSTM and generate text samples</p></li>
+<li><p>Experiment with different types of RNNs such as Bidirectional and Multilayer RNNs and compare their performance</p></li>
+</ul>
+<p>Session 5: Advanced Topics in Deep Learning</p>
+<ul>
+<li><p>Build and train an autoencoder for a dimensionality reduction or data compression task using Keras</p></li>
+<li><p>Implement a GAN for image generation or style transfer using Keras and a pre-trained dataset such as CelebA or WikiArt</p></li>
+<li><p>Apply reinforcement learning to a simple game or control problem using Keras and the OpenAI Gym library</p></li>
+<li><p>Discuss ethical considerations in deep learning and analyze a case study or research paper related to bias, fairness, or privacy.</p></li>
+</ul>
+<p><img src="data:image/svg+xml,%253csvg%2520xmlns=%2527http://www.w3.org/2000/svg%2527%2520version=%25271.1%2527%2520width=%252738%2527%2520height=%252738%2527/%253e.png" class="img-fluid" alt=""><img src="https://chat.openai.com/_next/image?url=https%253A%252F%252Fs.gravatar.com%252Favatar%252Fda5e51b4b4e8948b0cd0b6dc880cd5f1%253Fs%253D480%2526r%253Dpg%2526d%253Dhttps%25253A%25252F%25252Fcdn.auth0.com%25252Favatars%25252Fsa.png&amp;w=96&amp;q=75" class="img-fluid" alt="sanplaale@gmail.com"></p>
+<p>Recommend some teaching materials and references for both theoretical and practical sessions</p>
+<p>Certainly! Here are some recommended teaching materials and references for both the theoretical and practical sessions:</p>
+<p>Session 1: Introduction to Deep Neural Networks</p>
+<ul>
+<li><p>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press.</p></li>
+<li><p>Chollet, F. (2018). Deep Learning with R. Manning Publications.</p></li>
+<li><p>Keras documentation: <a href="https://keras.io/"><strong>https://keras.io/</strong></a></p></li>
+</ul>
+<p>Session 2: Backpropagation and Optimization</p>
+<ul>
+<li><p>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press.</p></li>
+<li><p>Nielsen, M. (2015). Neural Networks and Deep Learning. Determination Press.</p></li>
+<li><p>Keras documentation: <a href="https://keras.io/"><strong>https://keras.io/</strong></a></p></li>
+</ul>
+<p>Session 3: Convolutional Neural Networks (CNNs)</p>
+<ul>
+<li><p>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press.</p></li>
+<li><p>Chollet, F. (2018). Deep Learning with R. Manning Publications.</p></li>
+<li><p>Keras documentation: <a href="https://keras.io/"><strong>https://keras.io/</strong></a></p></li>
+</ul>
+<p>Session 4: Recurrent Neural Networks (RNNs)</p>
+<ul>
+<li><p>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press.</p></li>
+<li><p>Nielsen, M. (2015). Neural Networks and Deep Learning. Determination Press.</p></li>
+<li><p>Keras documentation: <a href="https://keras.io/"><strong>https://keras.io/</strong></a></p></li>
+</ul>
+<p>Session 5: Advanced Topics in Deep Learning</p>
+<ul>
+<li><p>Goodfellow, I., Bengio, Y., &amp; Courville, A. (2016). Deep Learning. MIT Press.</p></li>
+<li><p>Chollet, F. (2018). Deep Learning with R. Manning Publications.</p></li>
+<li><p>Keras documentation: <a href="https://keras.io/"><strong>https://keras.io/</strong></a></p></li>
+<li><p>Reinforcement Learning: An Introduction by Sutton and Barto: <a href="http://incompleteideas.net/book/the-book.html"><strong>http://incompleteideas.net/book/the-book.html</strong></a></p></li>
+<li><p>GANs: Ian Goodfellow’s original paper: <a href="https://arxiv.org/abs/1406.2661"><strong>https://arxiv.org/abs/1406.2661</strong></a></p></li>
+<li><p>Autoencoders: Francois Chollet’s blog post: <a href="https://blog.keras.io/building-autoencoders-in-keras.html"><strong>https://blog.keras.io/building-autoencoders-in-keras.html</strong></a></p></li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

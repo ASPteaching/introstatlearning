@@ -1,0 +1,104 @@
+---
+title: "Esquema de les sessions"
+format: html
+---
+
+## Introduction to Decision Trees
+
+- Definition and applications
+  - Definition of decision trees
+  - Applications of decision trees in different fields
+- Types of decision trees (classification trees, regression trees, and others)
+  - Classification trees
+  - Regression trees
+  - Multiclass classification trees
+  - Survival trees
+- Advantages and disadvantages
+  - Advantages of decision trees
+  - Limitations of decision trees
+- Examples in R
+  - Using the `rpart` package to build a classification tree
+  - Using the `tree` package to build a regression tree
+
+## Decision Tree Learning Algorithms
+
+- Recursive partitioning
+  - Recursive binary splitting algorithm
+  - Stopping criterion
+- Impurity measures (Gini index, entropy, classification error)
+  - Gini index
+  - Entropy
+  - Classification error
+- Splitting criteria
+  - Choosing the best split
+  - Splitting numerical variables
+  - Handling missing values
+- Examples in R
+  - Using different impurity measures to build a decision tree
+  - Handling missing values in the `rpart` package
+
+## Evaluation of Decision Trees
+
+- Confusion matrix
+  - True positive, false positive, true negative, false negative
+  - Types of errors (type I and type II errors)
+- Classification metrics (accuracy, precision, recall, F1 score)
+  - Accuracy
+  - Precision
+  - Recall
+  - F1 score
+- Regression metrics (mean squared error, mean absolute error, R-squared)
+  - Mean squared error
+  - Mean absolute error
+  - R-squared
+- Cross-validation
+  - K-fold cross-validation
+  - Leave-one-out cross-validation
+- Examples in R
+  - Evaluating a decision tree using a confusion matrix and classification metrics
+  - Evaluating a decision tree using cross-validation
+
+## Pruning and Optimization of Decision Trees
+
+- Cost-complexity pruning
+  - Tuning parameter alpha
+  - Building a pruned tree
+- Minimum description length principle
+  - Principle of Occam's razor
+  - Description length of a decision tree
+- Feature importance
+  - Variable importance measures
+  - Gini importance
+  - Permutation importance
+- Examples in R
+  - Pruning a decision tree using cost-complexity pruning
+  - Computing variable importance measures in the `rpart` package
+
+## Ensemble Methods for Decision Trees
+
+- Bagging
+  - Bootstrap aggregating
+  - Random sampling with replacement
+- Boosting
+  - Adaptive boosting
+  - Weighted voting
+- Random forests
+  - Ensemble of decision trees
+  - Random sampling of variables
+- Examples in R
+  - Building a bagged decision tree using the `ipred` package
+  - Building a boosted decision tree using the `adabag` package
+  - Building a random forest using the `randomForest` package
+
+## Practical Considerations for Decision Tree Modeling
+
+- Data preprocessing and feature selection
+  - Dealing with missing values
+  - Handling categorical variables
+  - Scaling numerical variables
+  - Feature selection techniques
+- Hyperparameter tuning
+  - Tuning the complexity of a decision tree
+ 
+
+

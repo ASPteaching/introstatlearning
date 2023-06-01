@@ -1,0 +1,15 @@
+knitr
+tree
+ISLR
+rpart
+rpart.plot
+dplyr
+ggplot2
+foreach
+iterators
+doParallel
+lattice
+caret
+ipred
+AmesHousing
+rsample

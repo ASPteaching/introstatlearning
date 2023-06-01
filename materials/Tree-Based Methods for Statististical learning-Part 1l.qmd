@@ -1,0 +1,1138 @@
+---
+title: "Tree based methods for Statistical Learning. Part 1"
+format: html
+---
+
+Each chapter contains at least one software section, which points to relevant implementations of the ideas discussed in the corresponding chapter. And while this book focuses on R, these sections will also allude to additional implementations in other open source programming languages, like Python and Julia. Furthermore, several code snippets are contained throughout the book to help solidify certain concepts (mostly in R).
+
+Be warned, I occasionally.use.dots in variable and function namesold $\mathrm{R}$ programming habits die hard. Package names are in bold text (e.g., rpart), inline code and function names are in typewriter font (e.g., sapply()), and file names are in sans serif font (e.g., path/to/filename.txt). In situations where it may not be obvious which package a function belongs to, l'll use the notation foo::bar(), where $\operatorname{bar}()$ is the name of a function in package foo.
+
+I often allude to the documentation and help pages for specific $R$ functions. For example, you can view the documentation for function foo() in package bar by typing ?foo::bar or help("foo", package = "bar") at the $\mathrm{R}$ console. It's a good idea to read these help pages as they will often provide more useful details, further references, and example usage. For base $\mathrm{R}$ functions-that is, functions available in R's base package-I omit the package name (e.g., ?kronecker). I also make heavy use of R's apply()-family of functions throughout the book, often for brevity and to avoid longer code snippets based on for loops. If you're unfamiliar with these, I encourage you to start with the help pages for both apply() and lapply().
+
+R package vignettes (when available) often provide more in-depth details on specific functionality available in a particular package. You can browse any available vignettes for a CRAN package, say foo, by visiting the package's homepage on CRAN at
+
+https://cran.r-project.org/package $=$ foo.
+
+You can also use the utils package to view package vignettes during an active $R$ session. For example, the vignettes accompanying the $R$ package rpart [Therneau and Atkinson, 2019], which is heavily used in Chapter 2, can be found at https://CRAN.R-project.org/ package=rpart or by typing utils::vignette("bar", package = "foo") at the $\mathrm{R}$ console.
+
+There's a myriad of $R$ packages available for fitting tree-based models, and this book only covers a handful. If you're not familiar with CRAN's task views, you should be. They provide useful guidance on which packages on CRAN are relevant to a certain topic (e.g., machine learning). The task view on statistical and machine learning, for example, which can be found at
+
+https://cran.r-project.org/web/views/MachineLearning.html,
+
+lists several $R$ packages useful for fitting tree-based models across a wide variety of situations. For instance, it lists RWeka [Hornik, 2021] as providing an open source interface to the J4.8-variant of $\mathrm{C} 4.5$ and M5 (see the online supplementary material on the book website). A brief description of all available task views can be found at https://cran.r-project.org/web/views/.
+
+Keep in mind that the focus of this book is to help you build a deeper understanding of tree-based methods, it is not a programming book. Nonetheless, writing, running, and experimenting with code is one of the best ways to learn this subject, in my opinion.
+
+This book uses a couple of graphical parameters and themes for plotting that are set behind the scene. So don't fret if your plots don't look exactly the same when running the code. This book uses a mix of base R and ggplot2 [Wickham et al., 2021a] graphics, though, I think there's a lattice [Sarkar, 2021] graphic or two floating around somewhere. For ggplot2-based graphics, I use the theme_bw() theme, which can be set at the top level (i.e., for all plots) using theme_set(theme_bw()). Most of the base R graphics in this book use the following par() settings (see ?graphics::par for details on each argument): 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-052.jpg?height=390&width=1468&top_left_y=236&top_left_x=255)
+
+Some of the base $R$ graphics in this book use a slightly different setting for the mar argument (e.g., to make room for plots that also have a top axis, like Figure 8.12 on page 349 ). 
+
+\subsection{Some example data sets}
+
+The examples in this book make use of several data sets, both real and simulated, and both small and large. Many of the data sets are available in the treemisc package that accompanies this book (or another $R$ package), but many are also available for download from the book's website:
+
+https://bgreenwell.github.io/treebook/datasets.html.
+
+In this section, l'll introduce a handful of the data sets used in the examples throughout this book. Some of these data sets are pretty common, and are often used in other texts or articles to illustrate concepts or compare and benchmark performance.
+
+\subsubsection{Swiss banknotes}
+
+The Swiss banknote data [Flury and Riedwyl, 1988] contain measurements from 200 Swiss 1000-franc banknotes: 100 genuine and 100 counterfeit. There are six available predictors, each giving the length (in $\mathrm{mm}$ ) of a different dimension for each bill (e.g., the length of the diagonal). The response variable is a $0 / 1$ indicator for whether or not the bill was genuine/counterfeit. This is a small data set that will be useful when exploring how some classification trees are constructed. The code snippet below generates a simple scatterplot matrix of the data, which is displayed in Figure 1.5:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-053.jpg?height=205&width=1403&top_left_y=1863&top_left_x=255)
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-054.jpg?height=1282&width=1346&top_left_y=237&top_left_x=389)
+
+FIGURE 1.5: Scatterplot matrix of the Swiss banknote data. The black circles and orange triangles correspond to genuine and counterfeit banknotes, respectively.
+
+Note how good some of the features are at discriminating between the two classes (e.g., top and diagonal). This is a small data set that will be used to illustrate fundamental concepts in decision tree building in Chapters $2-3$.
+
+\subsubsection{New York air quality measurements}
+
+The New York air quality data contain daily air quality measurements in New York from May through September of 1973 (153 days). The data are conveniently available in R's built-in datasets package; see ?datasets::airquality for details and the original source. The main variables include:
+
+- Ozone: the mean ozone (in parts per billion) from 1300 to 1500 hours at Roosevelt Island;
+
+- Solar.R: the solar radiation (in Langleys) in the frequency band 4000-7700 Angstroms from 0800 to 1200 hours at Central Park;
+
+- Wind: the average wind speed (in miles per hour) at 0700 and 1000 hours at LaGuardia Airport;
+
+- Temp: the maximum daily temperature (in degrees Fahrenheit) at La Guardia Airport.
+
+The month (1-12) and day of the month (1-31) are also available in the columns Month and Day, respectively. In these data, Ozone is treated as a response variable.
+
+This is another small data set that will be useful when exploring how some regression trees are constructed. A simple scatterplot matrix of the data is constructed below; see Figure 1.6. The upper diagonal scatterplots each contain a LOWESS smooth ${ }^{p}$ of the data (red curve). Note that there's a relatively strong nonlinear relationship between Ozone and both Temp and Wind, compared to the others.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-055.jpg?height=336&width=1139&top_left_y=1709&top_left_x=255)
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-056.jpg?height=1280&width=1304&top_left_y=234&top_left_x=408)
+
+Day
+
+FIGURE 1.6: Scatterplot matrix of the New York air quality data. Each black curve in the upper panel represents a LOWESS smoother.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-056.jpg?height=60&width=1540&top_left_y=1816&top_left_x=298)
+regression; see (Cleveland, 1979] for details.
+
+\subsubsection{The Friedman 1 benchmark problem}
+
+The Friedman 1 benchmark problem [Breiman, 1996a; Friedman, 1991] uses simulated regression data with 10 input features according to:
+
+$$
+Y=10 \sin \pi X 1 X 2+20 \times 3-0.52+10 X 4+5 X 5+\epsilon,
+$$
+
+where $\epsilon \sim \mathrm{N} 0, \sigma$ and the input features are all independent uniform random variables on the interval $0,1: X_{j j}=110$ iidU0,1. Notice how $X_{6}-X_{10}$ are unrelated to the response $Y$.
+
+These data can be generated in $\mathrm{R}$ using the mlbench.friedman1 function from package mlbench [Leisch and Dimitriadou., 2021]. Here, l'll use the gen_friedman1 function from package treemisc, which allows you to generate any number of features $\geq 5$; similar to the make_friedman1 function in scikit-learn's sklearn.datasets module for Python. See ?treemisc::gen_friedman1 for details. Below, I generate a sample of $\mathrm{N}=5$ observations from (1.2) with only seven features (so it prints nicely):
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-057.jpg?height=425&width=1107&top_left_y=1091&top_left_x=251)
+
+From (1.2), it should be clear that features $X_{1}-X_{5}$ are the most important! (The others don't influence $Y$ at all.) Also, based on the form of the model, we'd expect $X_{4}$ to be the most important feature, probably followed by $X_{1}$ and $X_{2}$ (both comparably important), with $X_{5}$ probably being less important. The influence of $X_{3}$ is harder to determine due to its quadratic nature, but it seems likely that this nonlinearity will suppress the variable's influence over its observed range (i.e., 0,1). Since the true nature of $E Y \mid x$ is known, albeit somewhat complex (e.g., nonlinear relationships and an explicit interaction effect), these data are useful in testing out different model interpretability techniques (at least on numeric features), like those discussed in Section 6. Since these data are convenient to generate, I'll use them in a couple of small-scale simulations throughout this book. 
+
+\subsubsection{Mushroom edibility}
+
+The mushroom edibility data is one of my favorite data sets. It contains 8124 mushrooms described in terms of 22 different physical characteristics, like odor and spore print color. The response variable (Edibility) is a binary indicator for whether or not each mushroom is Edible or Poisonous. The data are available from the UCI Machine Learning repository at https://archive.ics.uci.edu/ml/datasets/ mushroom, but can also be obtained from treemisc; see ? treemisc::mushroom for details and the original source.
+
+What's interesting about these data (at least to me) is that every single variable, both predictor and response, is categorical. These data will be helpful in illustrating how certain decision tree algorithms deal with categorical predictors when choosing splits. A mosaic plot showing the relationship between mushroom edibility and odor (one of the better discriminators between edible and poisonous mushrooms in this sample) is constructed below; see Figure 1.7.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-058.jpg?height=995&width=1309&top_left_y=1362&top_left_x=408)
+
+Edibility FIGURE 1.7: Mosaic plot visualizing the relationship between mushroom edibility and odor. The area of each tile is proportional to the number of observations in the particular category.
+
+The area of each tile is proportional to the number of observations in the particular category. The mosaic plot indicates that the poisonous group is dominated by mushrooms with a strong or unpleasant odor. Hence, we might surmise that poisonous mushrooms tend to be associated with strong or unpleasant odors.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-059.jpg?height=152&width=1263&top_left_y=790&top_left_x=258)
+
+\subsubsection{Spam or ham?}
+
+These data refer to $\mathrm{N}=4,601$ emails classified as either spam (i.e., junk email) of non-spam (i.e. "ham") that were collected at HewlettPackard (HP) Labs. In addition to the class label, there are 57 predictors giving the relative frequency of certain words and characters in each email. For example, the column charDollar gives the relative frequency of dollar signs (\$) appearing in each email. The data are available from the UCI Machine Learning repository at
+
+https://archive.ics.uci.edu/ml/datasets/spambase.
+
+In $\mathrm{R}$, the data can be loaded from the kernlab package [Karatzoglou et al., 2019]; see ?kernlab::spam for further details.
+
+Below, I load the data into $R$, check the frequency of spam and nonspam emails, then look at the average relative frequency of several different words and characters between each:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-059.jpg?height=371&width=656&top_left_y=2091&top_left_x=252)
+
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-060.jpg?height=319&width=1451&top_left_y=238&top_left_x=255)
+
+Notice how the first three variables show a much larger difference between spam and non-spam emails; we might expect these to be important predictors (at least compared to the other two) in classifying new HP emails as spam vs. non-spam. For example, given that these emails all came from Hewlett-Packard Labs, the fact that the non-spam emails contain a much higher relative frequency of the word hp makes sense (email spam was not as clever back in 1998).
+
+As a preview of what's to come, the code chunk below fits a basic decision tree with three splits (i.e., it asks three yes or no questions) to a $70 \%$ random sample of the data. It also takes into account the specified assumption that classifying a non-spam email as spam is five times more costly than classifying a spam email as non-spam. We'll learn all about rpart and the steps taken below in Chapter 2.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-060.jpg?height=918&width=1427&top_left_y=1503&top_left_x=254)
+
+The associated tree diagram is displayed in Figure 1.8. This tree is too simple and underfits the training data (I'll re-analyze these data using an ensemble in Chapter 5). Nonetheless, simple decision trees can often be displayed as a small set of simple rules. As a set of mutually exclusive and exhaustive rules, the tree diagram in Figure 1.8 translates to:
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-061.jpg?height=1866&width=1442&top_left_y=624&top_left_x=253)FIGURE 1.8: Decision tree diagram for a simple classification tree applied to the email spam learning sample.
+
+The first rule, for instance, states that if the relative frequency of the word "remove" is 0.01 or larger, then we would classify the email as spam with probability 0.95 .
+
+\subsubsection{Employee attrition}
+
+The employee attrition data contain (simulated) human resources analytics data of employees that stay and leave a particular company. The main objective with these data, according to the original source, is to "Uncover the factors that lead to employee attrition..." Such factors include age, job satisfaction, and commute distance. The response variable is Attrition, which is a binary indicator for whether or not the employee left (Attrition $=$ Yes) or stayed $($ Attrition $=$ No). The data are conveniently available via the $R$ package modeldata [Kuhn, 2021]; they can also be obtained from the following IBM GitHub repository: https://github.com/IBM/ employee-attrition-aif360. To load the data in $\mathrm{R}$, use:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-062.jpg?height=402&width=789&top_left_y=1484&top_left_x=256)
+
+\subsubsection{Predicting home prices in Ames, lowa}
+
+The Ames housing data [De Cock, 2011], which are available in the R package AmesHousing [Kuhn, 2020], contain information from the Ames Assessor's Office used in computing assessed values for individual residential properties sold in Ames, lowa from 2006-2010; online documentation describing the data set can be found at http://jse.amstat.org/v19n3/decock/DataDocumentation.txt.
+
+These data are often used as a more contemporary replacement to the often cited-and ethically challenged [Carlisle, 2019]-Boston housing data [Harrison and Rubinfeld, 1978].
+
+The data set contains $\mathrm{N}=2,930$ observations on 81 variables. The response variable here is the final sale price of the home (Sale_Price). The remaining 80 variables, which I'll treat as predictors, are a mix of both ordered and categorical features.
+
+In the code chunk below, l'll load the data into $R$ and split it into train/test sets using a 70/30 split, which I'll use in several examples throughout this book (note that for plotting purposes, mostly to avoid large numbers on the $y$-axis, l'll rescale the response by dividing by 1,000):
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-063.jpg?height=298&width=1331&top_left_y=1086&top_left_x=255)
+
+Figure 1.9 shows a scatterplot of sale price vs. above grade (ground) living area in square feet (Gr_Liv_Area) from the $70 \%$ learning sample. Above grade living area, as we'll see in later chapters, is arguably one of the more important predictors in this data set (as you might expect). It is evident from this plot that heteroscedasticity is present, with variation in sale price increasing with home size. Linear models assume constant variance whenever relying on the usual normal theory standard errors and confidence intervals for interpretation. Outliers are another potential problem.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-063.jpg?height=203&width=970&top_left_y=1975&top_left_x=258)
+
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-064.jpg?height=816&width=1433&top_left_y=226&top_left_x=346)
+
+Above grade square footage
+
+FIGURE 1.9: Scatterplot of sale price vs. above grade (ground) living area in square feet from the Ames housing training sample; here you can see five or so potential outliers.
+
+Note that predictions based solely on these data should not be used alone in setting the sale price of a home. I mean, they could, but they would likely not perform well over time. There are many complexities involved in valuing a home, and housing markets change over time. With the data at hand, it can be hard to predict such changes, especially during the initial Covid-19 outbreak during which the majority of this book was written (many things became rather hard to predict and forecast). However, such a model could be a useful place to start, especially for descriptive purposes.
+
+\subsubsection{Wine quality ratings}
+
+These data are related to red and white variants of the Portuguese "Vinho Verde" wine; for details, see Cortez et al. [2009]. Due to privacy and logistic issues, only physicochemical and sensory variables are available (e.g., there is no data about grape types, wine brand, wine selling price, etc.). The response variable here is the wine quality score (quality), which is an ordered integer in the range $0-10$.
+
+The data are available in the R package treemisc and can be used for classification or regression, but given the ordinal nature of the response, the latter is more appropriate; see ?treemisc::wine. The data can also be downloaded from the $\mathrm{UCl}$ Machine Learning repository at https://archive.ics.uci.edu/ml/datasets/wine+quality. Outlier detection algorithms could be used to detect the few excellent or poor wines. Also, it is not known if all the available predictors are relevant.
+
+Below, I load the data into $\mathrm{R}$ and look at the distribution of quality scores by wine type (e.g., red or white):
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-065.jpg?height=323&width=944&top_left_y=1084&top_left_x=255)
+
+Note that most wines (red or white) are mediocre and relatively few have very high or low scores. The response here, while truly an integer in the range $0-10$, is often treated as binary by arbitrarily discretizing the ordered response into "low quality" and "high quality" wines. A more appropriate analysis, which utilizes the fact that the response is ordered, is given in Section 3.5.2.
+
+\subsubsection{Mayo Clinic primary biliary cholangitis study}
+
+This example concerns data from a study by the Mayo Clinic on primary biliary cholangitis (PBC) of the liver conducted between January 1974 and May 1984; follow-up continued through July 1986. $\mathrm{PBC}$ is an autoimmune disease leading to destruction of the small bile ducts in the liver. There were a total of $N=418$ patients whose survival time and censoring indicator were known (l'll discuss what these mean briefly). The goal was to compare the drug $D$ penicillamine with a placebo in terms of survival probability. The drug was ultimately found to be ineffective; see, for example, Fleming and Harrington [1991, p. 2] and Ahn and Loh [1994] (the latter employs a tree-based analysis). An additional 16 potential covariates are included which l'll investigate further as predictors in Section 3.5.3.
+
+Below, I load the data from the survival package [Therneau, 2021] and do some prep work. For starters, l'll only consider the subset of patients who were randomized into the D-penicillamine and placebo groups; see ?survival::pbc for details. Second, l'll consider the small number of subjects who underwent liver transplant to be censored at the day of transplant ${ }^{q}$ :
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-066.jpg?height=651&width=1370&top_left_y=914&top_left_x=255)
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-066.jpg?height=54&width=1525&top_left_y=1659&top_left_x=300)
+the time the data were collected, so it still constitutes a natural history study for PBC.
+
+In this sample, 125 subjects died (i.e., experienced the event of interest) and the remaining 187 were considered censored (i.e., we only know they did not die before dropping out, receiving a transplant, or reaching the end of the study period).
+
+In survival studies (like this one), the dependent variable of interest is often time until some event occurs; in this example, the event of interest is death. However, medical studies cannot go on forever, and sometimes subjects drop out or are otherwise lost to follow-up. In these situations, we may not have observed the event time, but we at least have some partial information. For example, some of the subjects may have survived beyond the study period, or perhaps some dropped out due to other circumstances. Regardless of the specific reason, we at least have some partial information on these subjects, which survival analysis (also referred to as time-to-event or reliability analysis) takes into account.
+
+The scatterplot in Figure 1.10 shows the survival times for the first ten subjects in the PBC data, with an indicator for whether or not each observation was censored. The first subject, for example, was recorded dead at $\mathrm{t}=400$ days, while subject two was censored at $t=4,500$ days.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-067.jpg?height=872&width=1431&top_left_y=941&top_left_x=344)
+
+FIGURE 1.10: Survival times for the first ten (randomized) subjects in the Mayo Clinic PBC data.
+
+In survival analysis, the response variable typically has the form
+
+$$
+Y=\min T, C \text {, }
+$$
+
+where $T$ is the survival time and $C$ is the censoring time. In this book, I'll only consider right censoring (the most common form of censoring), where $\mathrm{T} \geq \mathrm{Y}$. In this case, all we know is that the true event time is at least as large as the observed timer. For example, if we were studying the failure time of some motor in a machine, we might have observed a failure at time $t=56$ hours, or perhaps the study ended at $t=100$ hours, so all we know is that the true failure time would have occurred some time after that.
+
+To indicate that a particular observation is censored, we can use a censoring indicator:
+
+\section{$\delta=1$ if $\mathrm{T} \leq \mathrm{C} 0$ if $\mathrm{T}>\mathrm{C}$ (i.e., censored),}
+
+${ }^{r}$ Left censoring and interval censoring are other common forms of censoring.
+
+where $\delta=1$ implies that we observed the true survival time and $\delta=0$ indicates a right censored observation (i.e., we only know the subject survived past time C). A common cause for right censoring in medical studies is that the study ended before the event of interest (e.g., death) occurred or perhaps some of the individuals dropped out or were lost to follow-up; in either case, we only have partial information. As we'll see, several classes of decision tree algorithms can be extended to handle right censored outcomes. Examples are provided in Sections 3.5.3 (single decision tree) and 8.9.1 (ensemble of decision trees).
+
+A common summary of interest in survival studies is the survival function:
+
+$$
+\mathrm{St}=\operatorname{Pr}>\mathrm{t}
+$$
+
+which describes the probability of surviving longer than time $t$. The Kaplan-Meier (or product limit) estimator is a nonparametric statistic used for estimating the survival function in the presence of censoring (if there isn't any censoring, then we could just use the ordinary empirical distribution function). The details are beyond the scope of this book, but the survfit function from package survival can do the heavy lifting for us. In the code snippet below, I call survfit to estimate and plot the survival curves for both the drug and placebo groups; see Figure 1.11. Here, you can see that the estimated survival curves between the treatment and control group are similar, indicating that Dpenicillamine is rather ineffective. The log-rank test can be used to test for differences between the survival distributions of two groups. Some decision tree algorithms for the analysis of survival data use the log-rank test to help partition the data; see, for example, Segal [1988] and Leblanc and Crowley [1993].
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-069.jpg?height=1244&width=1510&top_left_y=800&top_left_x=255)
+
+FIGURE 1.11: Kaplan-Meier estimate of the survival function for the randomized subjects in the Mayo Clinic $\mathrm{PBC}$ data by treatment group (i.e., drug vs. placebo). The median survival times are 3282 days (drug) and 3428 days (placebo).
+
+In Section 3.5.3, we'll see how a simple tree-based analysis can estimate the survival function conditional on a set of predictors, denoted $S^{\wedge} t \mid x$, by partitioning the learning sample into nonoverlapping groups with similar survival rates; here, we'll see further evidence that D-penicillamine was not effective in improving survival. For a thorough overview of survival analysis, my gold standard has always been Klein and Moeschberger [2003]. 
+
+\subsection{There ain't no such thing as a free lunch}
+
+Too often, we see papers or hear arguments claiming that some cool new algorithm $A$ is better than some existing algorithms $B$ and $C$ at doing D. This is mostly baloney, as any experienced statistician or modeler would tell you that no one procedure or algorithm is uniformly superior across all situations. That being said, you should not walk away from this book with the impression that tree-based methods are superior to any other algorithm or modeling tool. They are powerful and flexible tools for sure, but that doesn't always mean they're the right tool for the job. Consider them as simply another tool to include in your modeling and analysis toolbox. 
+
+\subsection{Outline of this book}
+
+This book is about decision trees, both individual trees (Part I) and ensembles thereof (Part II). There are a large number of decision tree algorithms in existence, and entire books have even been dedicated to some. Consequently, I had to be quite selective in choosing the topics to present in detail in this book, which has mostly been guided by my experiences with tree-based methods over the years in both academics and industry. As mentioned in Loh [2014], "There are so many recursive partitioning algorithms in the literature that it is nowadays very hard to see the wood for the trees."
+
+I'll discuss some of the major, and most important tree-based algorithms in current use today. However, due to time and page constraints, several important algorithms and extensions didn't make the final cut, and are instead discussed in the (free) online supplementary material that can be found on the book website. These methods include:
+
+- C5.0 [Kuhn and Johnson, 2013, Sec. 14.6], the successor to C4.5 [Quinlan, 1993], which is similar enough to CART that including it in a separate chapter would be largely redundant with Chapter 2;
+
+- MARS, which was briefly mentioned in Section 1.2 (see Table 1.1), is essentially an extension of linear models (and CART) that automatically handles variable selection, nonlinear relationships, and interactions between predictors;
+
+- rule-based models, like Certifiable Optimal RulE ListS [Angelino et al., 2018], or CORELS for short, which are very much like decision trees, but with an emphasis on producing a small number of simple rules (i.e., short sequences of yes or no questions).
+
+Decision trees remain one of the most flexible and practical tools in the data science toolbox, whether for description or prediction. While they are most commonly used for prediction problems in an ensemble (see Chapters 5-8), individual decision trees are still one of the most useful off-the-shelf analytic tools available (e.g., they can be used for missing value imputation, description, and variable ranking and selection, to name a few).
+
+The rest of this book is split into two parts:
+
+Part I: Individual decision trees. Common decision tree algorithms, like CART (Chapter 2), CTree (Chapter 3), and GUIDE (Chapter 4), are brought into focus. I'll discuss both the basics and the nittygritty details which are often glossed over in other texts, or buried in the literature. These algorithms form the building blocks upon which many current state-of-the-art prediction algorithms are built. Such algorithms are the focus of Part II.
+
+Part II: Decision tree ensembles. While Part I will highlight several useful decision tree algorithms, it will become apparent that individual trees rarely make good predictors, at least when compared to other popular algorithms, like neural networks and random forests (Chapter 7). Fortunately, we can often improve their performance by combining the predictions from several hundred or thousand individual trees together. There are several ways this can be accomplished, and Chapter 5 presents two popular and general strategies: bagging and boosting. Chapters 7-8 then dive deeper into specialized versions of bagging and boosting, respectively.
+
+Each chapter contains numerous software examples that help solidify the main concepts, typically, only involving minimal package use and developing ideas from scratch. Tree-specific software and longer examples, however, are typically reserved for the end of each chapter, after the main ideas have been presented. 
+
+\section{Part I}
+
+\section{Decision trees}
+
+
+
+\section{2 \\ Binary recursive partitioning with $C A R T$}
+
+I'm always thinking one step ahead, like a carpenter that makes stairs.
+
+Andy Bernard
+
+The Office
+
+This is arguably the most important chapter in the book. It is long, and rather involved, but serves as the foundation to more contemporary partitioning algorithms, like conditional inference treesCTree(Chapter 3), generalized, unbiased, interaction detection, and estimation (Chapter 4), and tree-based ensembles, such as random forests (Chapter 7) and gradient boosting machines (Chapter 8). 
+
+\subsection{Introduction}
+
+In this chapter, I'll discuss one of the most general (and powerful) tree-based algorithms in current practice: binary recursive partitioning. This treatment of the subject follows closely with the open source routines available in the rpart package [Therneau and Atkinson, 2019], the details of which can be found in the corresponding package vignettes which can be accessed directly from R using browseVignettes("rpart") (they can also be found on the package's CRAN landing page at https://cran.r-project.org/ package=rpart). The rpart package, which is discussed in depth in Section 2.9, is a modern implementation of the classification and regression tree (CART) ${ }^{a}$ procedures proposed in Breiman et al. [1984]. But don't let the words "classification" and "regression" in the name CART fool you; the procedure is general enough to be applied to many different types of data (e.g., categorical, continuous, multivariate, count, and censored outcomes). However, the primary focus of this chapter will be on standard classification and regression.
+
+Figure 2.1 shows two separate scatterplots, each of which has been divided into three non-overlapping rectangular regions. The left plot contains $\mathrm{N}=200$ Swiss banknotes (Section 1.4.1) that have been identified as either genuine (purple circles) or counterfeit (yellow triangles). The $x$-axis and $y$-axis correspond to the length (in mm) of the top and bottom edges of each bill, respectively. Clearly there's some separation between the classes using just these two features. We could use these three regions to classify new banknotes as either genuine or counterfeit according to the majority class in whichever region they belong to. For example, any banknote that lands in Region 3 will be classified as counterfeit, since the majority of training observations that occupy it are counterfeit. In this way, the top and right edges of Region 2 form a decision boundary that can be used for classifying new Swiss banknotes. Classification problem
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-077.jpg?height=653&width=720&top_left_y=297&top_left_x=342)
+
+Regression problem
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-077.jpg?height=651&width=721&top_left_y=298&top_left_x=1060)
+
+FIGURE 2.1: Scatterplots of two data sets split into three nonoverlapping rectangular regions. The regions were selected so that the response values within each were as homogenous as possible. Left: a binary classification problem concerning 200 Swiss banknotes that have been identified as either genuine (purple circles) or counterfeit (yellow triangles). Right: a regression problem (brighter spots indicate higher average response rates within each bin).
+
+Similarly, the right plot shows the relationship between temperature (degrees $\mathrm{F}$ ), wind speed ( $\mathrm{mph}$ ), and ozone level (the response, measured in $\mathrm{ppb}$ ) for the New York air quality data (Section 1.4.2); brighter points indicate higher ozone readings. The regions were selected in a way that tries to minimize the response variance within each, subject to some additional constraints. To predict the ozone level for a new data point $x$, we could use the average response rate from whichever region $x$ falls in (i.e., the prediction surface is a step function).
+
+This is the overall goal of CART, that is, to divide the feature space into non-overlapping rectangular regions that have similar response rates in each, which can then be used for description or prediction. For example, from a description standpoint, we can see that counterfeit Swiss banknotes tend to have abnormally longer top and bottom edges. a As mentioned in Section 1.2, the term "CART" is trademarked; hence, all the open source implementations go by other names. For brevity, l'll use the acronym CART to refer to the broad class of implementations that follow the original ideas in Breiman et al. [1984], which includes rpart and scikit-learn's sklearn.tree module scikit-learn.
+
+In more than two dimensions (i.e., more than two predictors), the disjoint regions are formed by hyperrectangles. Why rectangular regions? Rectangular regions are simpler and more computationally feasible to find; they also tend to yield a more interpretable model that can be represented using a convenient tree diagram. In particular, we want the resulting regions to be as homogeneous as possible with respect to the response variable. The challenge is in defining the regions. For example, how many regions should we use and where should we draw the lines? Obviously we could continue refining each region in the left side of Figure 2.1 by making more partitions, but this would eventually lead to overfitting.
+
+The term "binary recursive partitioning" is quite descriptive of the general CART procedure, which l'll discuss in detail in the next section for the classification case. The word binary refers to the binary (or two-way) nature of the splits used to construct the trees (i.e., each split partitions a set of observations into two nonoverlapping subsets). The word recursive refers to the greedy nature of the algorithm in choosing splits sequentially (i.e., the algorithm does not look ahead to find splits that are globally optimal in any sense; it only tries to find the next best split). And of course, partitioning refers to the way splits attempt to partition a set of observations into non-overlapping subgroups with homogeneous response values. 
+
+\subsection{Classification trees}
+
+The construction of classification trees (categorical outcome) and regression trees (continuous outcome) is very similar. However, classification trees involve some subtle nuances that are easy to overlook, so l'll consider them in detail first. To begin, let's go back to the Swiss banknote data from Figure 2.1. As discussed in Section 1.4.1, these data contain six continuous measurements on 200 Swiss 1000-franc banknotes: 100 genuine and 100 counterfeit. The goal is to use the six available features to classify new Swiss banknotes as either genuine or counterfeit.
+
+The code chunk below loads the data into $R$ and prints the first few observations:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-079.jpg?height=418&width=1142&top_left_y=1119&top_left_x=253)
+
+A tree diagram representation of the Swiss banknote regions from Figure 2.1 is displayed in Figure 2.2. The bottom number in each node gives the fraction of observations that pass through that node (hence, the root node displays $100 \%$ ). The values in the middle give the proportion of counterfeit and genuine banknotes, respectively, and the class printed at the top corresponds to the larger fraction (i.e., whichever class holds the majority in the node). The number above each node gives the corresponding node number. This is an example classification tree that can be used to classify new Swiss banknotes. For example, any Swiss banknote with bottom $>=9.55$ would be classified as counterfeit $(y=1)$; note that the split points are rounded for display purposes in Figure 2.2. The proportion of counterfeit bills in this node is 0.977 and can be used as an estimate of $\operatorname{PrY}=1 \mid x$; but more on this later. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-080.jpg?height=797&width=1309&top_left_y=233&top_left_x=408)
+
+FIGURE 2.2: Example decision tree diagram for classifying Swiss banknotes as counterfeit or genuine.
+
+From this tree, we can construct three simple rules for classifying new Swiss banknotes using just the bottom and top length of each bill:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-080.jpg?height=582&width=1263&top_left_y=1407&top_left_x=254)
+
+This tree was found using the CART algorithm as implemented in rpart; the corresponding $R$ code is used in Section 2.9.1. But how did CART determine which features to split on and which split point to use for each? Since this is a binary classification problem, CART searched for the predictor/split combinations that "best" separated the genuine banknotes from the counterfeit ones (I'll discuss how "best" is determined in the next section). 
+
+\subsubsection{Splits on ordered variables}
+
+Let's first discuss in general how CART finds the "best" split for an ordered variable. A hypothetical split $S$ of an arbitrary node $A$ into left and right child nodes, denoted $A_{L}$ and $A_{R}$, respectively, is shown in Figure 2.3. If $A$ contains $N$ observations, then $S$ partitions $A$ into subsets $A_{L}$ and $A_{R}$ with node sizes $N_{L}$ and $N_{R}$, respectively; note that $N L+N R=N$. Since the splitting process we're about to describe applies to any node in a tree, we can assume without loss of generality that $A$ is the root node, which contains the entire learning sample (that is, all of the training data that will be used in constructing the tree). For now, l'll assume that all of the features are ordered, which includes both continuous and ordered categorical variables (I'll discuss splits for nominal categorical features in Section 2.4). The first step is to partition the root node in a way that "best separates" the individual class labels into two child nodes; I'll discuss ways to measure how well a particular split separates the class labels momentarily.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-081.jpg?height=501&width=954&top_left_y=1381&top_left_x=583)
+
+FIGURE 2.3: Hypothetical split for some parent node $A$ into two child nodes using a continuous feature $x$ with split point $c$.
+
+The split $S$ depicted in Figure 2.3 can be summarized via a 2-by-2 contingency table giving the number of observations from each class that go to the left or right child node. Table 2.1 gives such a summary for a binary 0/1 outcome. For example, N0,AL is the number of observations belonging to class $y=0$ that went to the left child node. The row and column margins are also displayed. 
+
+$$
+\begin{aligned}
+& y=0 \quad y=1 \\
+& \begin{array}{c|c|c|}
+\hline A_{L}: x \geq c & N_{0, A_{L}} & N_{1, A_{L}} \\
+\hline A_{R}: x<c & N_{A_{L}} \\
+\cline { 2 - 3 } & N_{0, A_{R}} & N_{1, A_{R}} \\
+\hline
+\end{array} \\
+& N_{0, A} \quad N_{1, A}
+\end{aligned}
+$$
+
+TABLE 2.1: Confusion table summarizing the split $S$ depicted in Figure 2.3.
+
+CART takes a greedy approach to tree construction. At each step in the splitting process, CART uses an exhaustive search to look for the next best (i.e., locally optimal) split, which does not necessarily lead to a globally optimal tree structure. This offers a reasonable trade-off between simplicity and complexity-otherwise the algorithm would have to consider all future potential splits at each step, which would lead to a combinatorial explosion. Let's turn our attention now to how CART chooses to split a node.
+
+Let's assume the outcome is binary with $\mathrm{J}=2$ classes that are arbitrarily coded as 0/1 (e.g., for failure/success). For a continuous feature $x$ with $k$ distinct values, CART will consider $k-1$ potential splits. ${ }^{\text {T }}$ Typically, the midpoints of any two consecutive unique values are used as potential split points; for example, if $x$ has unique values $1,3,7$ in the learning sample, then CART will consider 2,5 for potential split points. With k-1 potential splits to consider, which one does CART choose to partition the data? Ideally, it'd be the split that gives the "best separation" of the class labels (e.g., genuine and counterfeit banknotes, or edible and poisonous mushrooms). So how do we define the goodness of a particular split? Enter node impurity measures.
+
+Ideally, we want the two resulting child nodes, $A_{L}$ and $A_{R}$, to be as homogeneous as possible with respect to the class labels (e.g., all 0s or all 1s, if possible). To that end, we'd like to construct some function iA that measures the impurity of a particular node $A$. At one extreme, $A$ could be a pure node, that is, contain either all $0 \mathrm{~s}$ or all $1 \mathrm{~s}$, in which case $\mathrm{i} A=0$. At the other extreme, the class labels in $A$ are uniformly distributed (i.e., a 50/50 mix of 0s and 1s)-this is a worst-case scenario and the worst split possible. In this situation, the impurity function, iA, should be at a maximum.
+
+Two common measures of node impurity used in CART are the Gini index and cross-entropy (or just entropy for short). For a response with $J$ classes, these are defined as:
+
+$$
+\mathrm{iA}=\sum \mathrm{j}=1 \mathrm{JpjA} 1-p j A G i n i \text { index- } \sum \mathrm{j}=1 \mathrm{~J} j \mathrm{~A} A \text { logpjA Cross-entropy, }
+$$
+
+where pjA is the expected proportion of observations in $A$ that belong to class $j$; note that $\mathrm{iA}$ is a function of the pjA $(j=1,2, \ldots, \mathrm{J})$. To avoid problems with $\log 0$ in (2.1), we define $0 \log 0 \equiv 0$.
+
+Another splitting measure, called the twoing splitting rule [Breiman et al., 1984, pp. 104-106], is only implemented in proprietary software (at least I'm not aware of any open source implementations of CART that support it). The twoing method tends to generate more balanced splits than the Gini or cross-entropy methods. For a binary response, the twoing criterion is equivalent to the Gini index. See Breiman [1996c] for additional details.
+
+Before continuing, we need to introduce some more notation. Let $N$ be the number of observations in the learning sample and $N_{j}$ be the number of observations in the learning sample that belong to class $j$ (i.e., $\sum \mathrm{j}=1 \mathrm{JNj}=\mathrm{N}$ ). Similarly, let $N_{A}$ be the number of observations in node $A$, and $\mathrm{Nj}, \mathrm{A}$ be the number of observations in $A$ that belong to class $j$. We can estimate pjA with $\mathrm{Nj}, \mathrm{A} / \mathrm{NA}$, the proportion of observations in $A$ that belong to class $j .{ }^{C}$
+
+${ }^{\mathrm{b}}$ For large data sets, $k$ may be too large, and approximate solutions can be used for scalability; for example, binning $x$ by constructing a histogram on GPUs (Graphical Processing Units) [Zhang et al., 2017], which can then be used to quickly find a nearly optimal split.
+
+For binary $0 / 1$ outcomes, if we let $p=p 1 A$ be the expected proportion of $1 \mathrm{~s}$ in $A$, then (2.1) simplifies to
+
+$$
+\mathrm{iA}=2 \mathrm{p} 1-p \text { Gini index-plogp-1-plog1-pCross-entropy. }
+$$
+
+These are plotted in Figure 2.4 below.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-084.jpg?height=883&width=1436&top_left_y=884&top_left_x=342)
+
+FIGURE 2.4: Common impurity measures for two-class classification problems, as a function of the the expected proportion of successes $(p)$.
+
+You may wonder why I'm not considering misclassification error as a measure of impurity. As it turns out, misclassification error is not a useful impurity measure for deciding splits; see, for example, Hastie et al. [2009, Section 9.2.3]. However, misclassification error can be a useful measure of the risk associated with a tree and is used in decision tree pruning (Section 2.5). ${ }^{\mathrm{C}}$ Technically, we should use pjA $\propto \pi \mathrm{Nj}, \mathrm{A} / \mathrm{Nj}$, where $\pi_{j}$ represents the true proportion of class $j$ in the population of interest (called the prior for class $j$ ), but l'll come back to this in Section 2.2.4. For now, let's take $\pi j=N j / N$, the observed proportion of observations in the learning sample that belong to class $j$-this assumption is not always valid (e.g., when the data have been downsampled), but simplifies the formulas in this section, so l'll leave the complexities to Section 2.2.4.
+
+Now that we have some notion of node impurity, we can define a measure for the quality of a particular split. In essence, the quality of an ordered split $S=x, c$ (see Figure 2.3), often called the gain of $S$, denoted $\triangle I S, A$, is defined as the degree to which the two resulting child nodes, $A_{L}$ and $A_{R}$, reduce the impurity of the parent node $A$ :
+
+$\Delta I S, A=p A i A-p A L i A L+p A R i A R=p A i A-p A L i A L-p A R i A R$.
+
+Here, $\mathrm{pA}, \mathrm{pAL}$, and $\mathrm{pAR}$ correspond to the expected proportion of new observations in nodes $A, A_{L}$, and $A_{R}$, respectively. For example, we can interpret $\mathrm{pAL}$ as the probability of a case falling in the left child node $A_{L}$. If $A$ is the root node, then $\mathrm{pA}=1$; otherwise, we can estimate it with NA/N. For the two-class problem (i.e., $\mathrm{J}=2$ ), we can estimate $\mathrm{pAL}$ and $\mathrm{pAR}$ with the corresponding proportion of training cases in $A_{L}$ and $A_{R}$, respectively. For instance, we can estimate $\mathrm{pAL}$ with $\mathrm{NAL} / \mathrm{N}$.
+
+In essence, we want to find the split $S$ (i.e., $x<c$ vs. $x \geq c$ ) associated with the maximum gain: Sbest=* arg $\operatorname{maxS} \triangle \mathrm{IS}, \mathrm{A}$. To this end, CART performs an exhaustive search through all features and potential splits therein, and chooses the split with maximal gain to partition $A$ into two child nodes. This process is then repeated recursively in each resulting child node until a saturated tree has been constructed (i.e., no more splits are possible) or some suitable stopping criteria have been met (e.g., the specified maximum depth of the tree has been reached). While CART's approach to choosing the best split seems complicated, we'll implement it in $R$ from scratch and apply it to the Swiss banknote data set in Section 2.2.2. 
+
+\subsubsection{So which is it in practice, Gini or entropy?}
+
+For binary trees, Breiman [1996c] noted that the Gini index tends to prefer splits that put the most frequent class into one pure node, and the remaining classes into the other. Both entropy and the twoing splitting rules, on the other hand, put their emphasis on balancing the class sizes in the two child nodes. In problems with a small number of classes (i.e., $\mathrm{J}=2$ ), the Gini and entropy criteria tend to produce similar results.
+
+Géron [2019, pp.183-184] echoes similar thoughts to Breiman's: "So should you use Gini impurity or entropy? The truth is, most of the time it does not make a big difference: they lead to similar trees. Gini impurity is slightly faster to compute, so it is a good default. However, when they differ, Gini impurity tends to isolate the most frequent class in its own branch of the tree, while entropy tends to produce slightly more balanced trees."
+
+\subsubsection{Example: Swiss banknotes}
+
+Returning to the Swiss banknote example, our goal is to find the first split condition that "best" separates the genuine banknotes from the counterfeit ones. Here, we'll restrict our attention to just two features: top and bottom, which give the length (in $\mathrm{mm}$ ) of the top and bottom edge, respectively. (We're restricting attention to these two features because, as we'll see later, diagonal is too good a predictor and leads to a less interesting illustration of finding splits.) Since this is a classification problem, we can use cross-entropy or the Gini index to measure the goodness of each split; here, we'll use the Gini index and leave implementing cross-entropy as an exercise for the reader.
+
+A simple $R$ function for computing the Gini index in the two-class case is given below. This function takes the binary target values as input, which are assumed to be coded as 0/1 (which corresponds to genuine/counterfeit, in this example); compare the function below to $(2.2)$. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-087.jpg?height=198&width=1013&top_left_y=235&top_left_x=255)
+
+To find the optimal split $S=x, c$, where $x$ is an ordered (but numeric) feature and $c$ is in its domain, we need to search through every possible value of $c$. This can be done, for example, by searching through the midpoints of the sorted, unique values of $x$. For each split, we then need to compute the weighted impurity of the current (or parent) node, as well as the weighted impurities of the resulting left and right child nodes; then we find which split point resulted in the largest gain (2.3).
+
+A simple $R$ function, called splits(), for carrying out these steps is given below. Here, node is a data frame containing the observations in a particular node (i.e., a subset of the learning sample), while $x$ and $y$ give the column names in node corresponding to the (ordered numeric) feature of interest and the (binary or 0/1) target, respectively. The argument $n$ specifies the number of observations in the learning sample; this is needed to compute the probabilities $\mathrm{pA}$, pAL, and pAR used in (2.3). The use of drop = TRUE in the definitions of the variables left and right ensures the results are coerced to the lowest possible dimension. The drop argument in subsetting arrays and matrices is used a lot in this book; for details, see ?'[' and ?drop for additional details.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-087.jpg?height=762&width=1440&top_left_y=1731&top_left_x=255)
+
+Let's test this function out on the full data set (i.e., $A$ is the root node) and find the optimal split point for bottom. To start, we'll find the gain that is associated with each possible split point and plot the results:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-088.jpg?height=586&width=1115&top_left_y=443&top_left_x=255)
+
+Figure 2.5 shows the split value $c$ as a function of gain (or goodness of split). We can extract the exact cutpoint associated with the largest gain using
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-088.jpg?height=1068&width=1506&top_left_y=1266&top_left_x=254)
+
+FIGURE 2.5: Reduction to the root node impurity as a function of the split value $c$ for the bottom edge length $(\mathrm{mm})$. Here, we can see that the optimal split point for bottom is $9.55 \mathrm{~mm}$. A typical tree algorithm based on an exhaustive search would do this for each feature and pick one feature with the largest overall gain. Since all the features in banknote are continuous, we can just apply splits() to each feature to see which predictor would be used to first split the training data (i.e., the root node). To make things easier, let's write a wrapper function that calls splits() for any number of features, finds the split point associated with the largest gain for each, and then returns the best predictor/cutpoint pair. This is accomplished by the find_best_split() function below:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-089.jpg?height=531&width=1301&top_left_y=858&top_left_x=248)
+
+Now we're ready to start recursively partitioning the banknote data set. The code chunk below uses find_best_split() on the root node (i.e., the full learning sample) to find the best split between the features top and bottom:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-089.jpg?height=230&width=1157&top_left_y=1678&top_left_x=255)
+
+Using the Gini index, the best way to separate genuine bills from counterfeit ones, using only the lengths of the top and bottom edges, is to separate the banknotes according to whether or not bottom $>=$ $9.55(\mathrm{~mm}$ ), which partitions the root node (i.e., full learning sample) into two relatively homogeneous subgroups (or child nodes):
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-089.jpg?height=204&width=1116&top_left_y=2254&top_left_x=255)
+
+\#>
+
+\# $0 \quad 1$
+
+\# 286
+
+table(right\$y) \# class distribution in right child node
+
+\#>
+
+\# $0 \quad 1$
+
+\# 9814
+
+It makes no difference which node we consider the left or right child node; here I chose them for consistency with the tree diagram from Figure 2.2. Notice how the left child node is nearly pure, since 86 of the 88 observations $(98 \%)$ in that node are counterfeit. While we could try to further partition this node using another split, it will likely lead to overfitting. The right node, on the other hand, is less homogeneous, with 14 of the 112 observations being counterfeit, and could potentially benefit from further splitting, as shown below:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-090.jpg?height=183&width=1218&top_left_y=1157&top_left_x=255)
+
+The next best split used top with a split value of $\mathrm{c}=11.15(\mathrm{~mm})$ and a corresponding gain of 0.082 . The resulting child nodes from this split are more homogenous but still not pure.
+
+These two splits match the tree structure from Figure 2.2, which was obtained using actual tree fitting software, but more on that later. Without any stopping criteria defined, the partitioning algorithm could continue splitting until all terminal nodes are pure (a saturated tree). In Section 2.5, we'll discuss how to select an optimal number of splits (e.g., based on cross-validation). Saturated (or nearly full grown) trees are not generally useful on their own; however, in Chapter 5 , we'll discuss a simple ensemble technique for improving the performance of individual trees by aggregating the results from several hundred (or even thousand) saturated trees.
+
+\subsubsection{Fitted values and predictions}
+
+Fitted values and predictions for new observations are obtained by passing records down the tree and seeing which terminal nodes they fall in. Recall that every terminal node in a fitted tree comprises some subset of the original training instances. If $A$ is a terminal node, then any observation $\mathrm{x}$ (training or new) that lands in $A$ would be assigned to the majority class in $A:$ * $\arg \operatorname{maxj} \in 1,2, \ldots, \mathrm{JNj}, \mathrm{A}$; tie breaking can be handled in a number of ways (e.g., drawing straws). The predicted probability of $\mathrm{x}$ belonging to class $j$, which is often of more interest (and more useful) than the classification of $\mathrm{x}$, is given by the proportion of training observations in $A$ that belong to class $j$ :
+
+$$
+\operatorname{Pr}{ }^{\wedge} Y=j \mid x=p j A=N j, A / N A, \quad j=1,2, \ldots, J .
+$$
+
+In the Swiss banknote tree (Figure 2.2; p. 43), any Swiss banknote with bottom > $=9.55(\mathrm{~mm})$ would be classified as counterfeit (since the majority of observations in the corresponding terminal node are counterfeit) with a predicted probability of $86 /(86+2)=0.977$; note that the fitted probabilities in Figure 2.2 have been rounded to two decimal places, which is why they are not identical to the results we computed by hand in the previous section.
+
+In summary, terminal nodes in a CART-like tree are summarized by a single statistic (or sometime multiple statistics, like the individual class proportions for J-class classification), which is then used to obtain fitted value and predictions-all observations that are predicted to be in the same terminal node also receive the same prediction. In classification trees, terminal nodes can be summarized by the majority class or the individual class proportions which are then used to generate classifications or predicted class probabilities for each of the $J$ classes, respectively. Similarly, the terminal nodes in a CART-like regression tree (Section 2.3) can be summarized by the mean or median response, typically the former.
+
+\subsubsection{Class priors and misclassification costs}
+
+In Section 2.2.3, I mentioned that classifying new observations is done via a majority vote. ${ }^{d}$ Similarly, predicted class probabilities can be obtained using the observed class proportions in the terminal nodes. This is a reasonable thing to do if the data are a random sample from some population of interest and the observed frequencies of each target class reflect the true balance in the population. If the observed class frequencies are off (e.g., the data have been downsampled, upsampled, or the design used to collect the data intentionally over-sampled the minority class to get a representative sample), then it may be beneficial to reweight the observations in a way that reflects the true class proportions, especially when searching for the best splits.
+
+The common but often misguided practice of artificially rebalancing the class labels is especially interesting. Frank Harrell, who we briefly met in Section 1.1.2.4, once wrote
+
+d For more than two classes (i.e., $\mathrm{J}>2$ ), a plurality vote is used.
+
+A special problem with classifiers illustrates an important issue. Users of machine classifiers know that a highly imbalanced sample with regard to a binary outcome variable $y$ results in a strange classifier. For example, if the sample has 1,000 diseased patients and $1,000,000$ non-diseased patients, the best classifier may classify everyone as non-diseased; you will be correct 0.999 of the time. For this reason the odd practice of subsampling the controls is used in an attempt to balance the frequencies and get some variation that will lead to sensible looking classifiers (users of regression models would never exclude good data to get an answer). Then they have to, in some illdefined way, construct the classifier to make up for biasing the sample. It is simply the case that a classifier trained to a $1 / 2$ prevalence situation will not be applicable to a population with a $1 / 1,000$ prevalence. The classifier would have to be re-trained on the new sample, and the patterns detected may change greatly. Fortunately, CART can flexibly handle imbalanced class labels without changing the learning sample. At a high level, we can assign specific unequal losses or penalties on a one-by-one basis to each type of misclassification error; in binary classification, there are two types of misclassification errors we can make: misclassify a 0 as a 1 (a false positive) or misclassify a 1 as a 0 (a false negative). The CART algorithm can account for these unequal losses or misclassification costs when deciding on splits and making predictions. Unfortunately, it seems that many practitioners are either unaware, or fail to take advantage of this feature.
+
+Our discussion of splitting nodes in Section 2.2.1 implicitly made several assumptions about the available data. For instance, estimating pjA with $\mathrm{Nj}, \mathrm{A} / \mathrm{NA}$, the proportion of observations in node $A$ that belong to class $j$, assumes the training data are a random sample from some population of interest. In particular, it assumes that the true prior probability of observing class $j$, denoted $\pi_{j}$, can be estimated with the observed proportion of class $j$ observations in the training data; that is, $\pi j \approx \mathrm{Nj} / \mathrm{N}$. If the observed class proportions are off (e.g., the data have been downsampled or the minority class has intentionally been over-sampled to over-represent rare cases), then $\mathrm{Nj}, \mathrm{A} / \mathrm{NA}$ is no longer a reasonable estimate of pjA. Instead, we should be using pjA $\propto$ mjNj,A/Nj, where we scale the $p j A j=1 \mathrm{~J}$ to sum to one. Note that if we take $\pi_{j}$ to be the observed class proportions, then $\pi j=N j / N$ and pjA reduces to the observed proportion of observations in $A$ that belong to class $j$. Similarly, when determining the "best" split in Section 2.2.1, we weighted the impurity of the two resulting child nodes, $A_{L}$ and $A_{R}$, by the expected proportions of new observations going to each. If the data are not a random sample, then we should estimate $p A$ with $p A \approx \sum j=1 \mathrm{~J} \pi \mathrm{Nj}, \mathrm{A} / \mathrm{Nj}$; and similarly for pAL and pAR. Again, if we take $\pi_{j}$ to be the observed class proportions in the learning sample, like we assumed in Section 2.2.1, then we can estimate pA with $N A / N$, the proportion of observations in node $A$. However, this is not always realistic. Think about the Swiss banknote data. These data consist of a 50/50 split of both counterfeit and genuine banknotes, which is not likely to be representative of the true class distributions. Nonetheless, I can't find any background information on how these data were collected. So, without additional information about the true class distributions, there's not much we can do. The example given in Section 2.9.5 demonstrates the use of CART with updated class prior information from historical data.
+
+What's important to remember is that the prior class probabilities, $\pi j j=1 \mathrm{~J}$, affect the choice of splits in a tree and how the terminal nodes are summarized (e.g., how fitted values and new predictions are computed).
+
+Increasing/decreasing the prior probabilities for certain classes essentially tricks CART into attaching more/less importance to those classes. In other words, it will try harder to correctly predict the classes associated with higher priors at the expense of less accurately predicting the other ones; in this sense, the prior probabilities can be seen as a tuning parameter in decision tree construction, especially if you want to attach more importance to correctly classifying certain classes. However, in some cases, it may be more natural to think about the specific costs associated with certain misclassifications. For example, with binary outcomes, it is often the case that false positives are more severe than false negatives, or vice versa. In the mushroom classification example (Section 1.4.4), it would be far worst to misclassify a poisonous mushroom as edible (a false negative, assuming poisonous represents the positive class, or class of interest) than to misclassify an edible mushroom as poisonous (a false positive). The next section introduces a general strategy for incorporating unequal losses, called altered priors; a second strategy, called the generalized Gini index, is discussed in the "Introduction to Rpart" vignette; see vignette("longintro", package = "rpart") for details. 
+
+\subsubsection{Altered priors}
+
+Let $\mathrm{L}$ be a $\mathrm{J} \times \mathrm{J}$ loss matrix with entries Li,j representing the loss (or cost) associated with misclassifying an $i$ as a $j$. We can define the risk of a node $A$ as
+
+$$
+r A=\sum j=1 J p j A \times L j, T A,
+$$
+
+where $\tau_{A}$ is the class assigned to $A$, if $A$ were a terminal node, such that this risk is minimized. Since pjA depends on the prior class probabilities, risk is a function of both misclassification costs and class priors.
+
+As a consequence, we can take misclassifcation costs into account by absorbing them into the priors for each class; this is referred to as the altered priors method. In particular, if
+
+$$
+\mathrm{Li}, \mathrm{j}=\mathrm{Li} \quad \mathrm{i} \neq \mathrm{j} \quad \mathrm{i}=\mathrm{j}
+$$
+
+then we can use the prior approach discussed above with the priors altered according to
+
+$$
+\pi \widetilde{i}=\pi j L i / \Sigma j=1 J \pi j L j
+$$
+
+where $\pi_{j}$ is the prior (observed or specified) associated with class $j$ $(\mathrm{j}=1,2, \ldots, \mathrm{J})$. This is always possible for binary classification (i.e., $\mathrm{J}=2$ ). For multiclass problems (i.e., $\mathrm{J} \geq 3$ ), we can use (2.5) with $\mathrm{Li}=\sum \mathrm{i}=1 \mathrm{JLi}, \mathrm{j}$.
+
+For details and further discussion, see Berk [2008, pp. 122-128] or the "Introduction to Rpart" vignette in package rpart (use vignette("longintro", package = "rpart") at the $\mathrm{R}$ console).
+
+\subsubsection{Example: employee attrition}
+
+To illustrate, let's walk through a detailed example using the employee attrition data set (Section 1.4.6). Figure 2.6 displays two classification trees fit to the employee attrition data, each with a max depth of two. ${ }^{e}$ The only difference is that the tree on the left used the observed class priors mno $=1233 / 1470=0.839$ and пyes $=237 / 1470=0.161$ (i.e., it treats both types of misclassifications as equal). The tree on the right used altered priors based on the following loss (or misclassification cost) matrix:
+
+${ }^{\mathrm{e}}$ The depth of a decision tree is the maximum of the number of edges from the root node to each terminal node and is a common tuning parameter; see Section 8.3.2.
+
+$$
+\boldsymbol{L}=\underset{\text { Yos }}{\text { Yo }}\left(\begin{array}{cc}
+\text { No } & \text { Yes } \\
+8 & 1 \\
+0
+\end{array}\right),
+$$
+
+where the rows represent the true class and the columns represent the predicted class. For example, we're saying that it is 8 times more costly to misclassify a Yes (employee will leave due to attrition) as a No (employee will not leave due to attrition) than it is to misclassify a No as a Yes. Using this loss matrix, we can compute the altered priors as follows:
+
+$$
+\pi \sim \text { no } \propto 0+1 \pi n o=1233 / 1470=0.839 \pi \tilde{\text { yes }} \propto 8+0 \pi y e s=8237 / 1470=1.290
+$$
+
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-097.jpg?height=802&width=1388&top_left_y=236&top_left_x=366)
+
+FIGURE 2.6: Decision trees for the employee attrition example. Left: default (i.e., observed) class priors. Right: altered class priors.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-097.jpg?height=65&width=1601&top_left_y=1222&top_left_x=262)
+Notice how altering the priors resulted in a tree with different splits and node summaries.
+
+The confusion matrix from each tree applied to the learning sample is shown in Table 2.2. Altering the priors by specifying a higher cost for misclassifying the Yeses increased the number of true negatives (assuming No represents the positive class) from 48 to 233 , albeit at the expense of decreasing the number of true negatives from 1212 to 163. Finding the right balance is application-specific and requires a lot of thought and collaboration with subject matter experts.
+
+TABLE 2.2: Confusion matrix from the trees in Figure 2.6.
+
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline & & \multicolumn{4}{|c|}{ Observed class } \\
+\hline & & \multicolumn{2}{|c|}{ Default priors } & \multicolumn{2}{|c|}{ Altered priors } \\
+\hline & & No & Yes & No & Yes \\
+\hline \multirow{2}{*}{ Predicted class } & No & 1212 & 189 & 163 & 4 \\
+\hline & Yes - L - & 21 & 48 & 1070 & 233 \\
+\hline
+\end{tabular}
+
+The tree structure on the left of Figure 2.6 uses the same calculations we worked through for the Swiss banknote example, so let's walk through some of the calculations for the tree on the right. In any particular node $A$, we estimate pnoA@mno×Nno,A/Nno and pyesA $₫ \Pi^{\sim} y e s \times$ Nyes,A/Nyes, which are rescaled to sum to one. For instance, if $A$ is the root node, we have pnoA $=\pi$ no $=0.394$ since Nno,A/Nno=1233/1233=1. Similarly, pyesA=0.606. We can then calculate the impurity of the root node using the Gini index:
+
+$$
+\mathrm{iA}=2 \times \mathrm{pnoA} \times 1-\mathrm{pnoA}=0.478
+$$
+
+If we split the data according to Overtime $=$ Yes (right branch) vs. Overtime = No (left branch), we have the following:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-098.jpg?height=813&width=1335&top_left_y=844&top_left_x=249)
+
+For the left child node, we have
+
+pAL=mno $\times 944 / 1233+\pi \tilde{y}$ yes $\times 110 / 237=0.583, p n o A L=\pi \sim n o \times 944 / 1233 /$ $p A L=0.518$, pyesAL=1-pnoAL=0.482, $\mathrm{ALL}=2 \times$ pnoAL $\times 1-$ pnoAL $=0.499$.
+
+Similarly, for the right child node, we have:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-098.jpg?height=71&width=1605&top_left_y=2084&top_left_x=257)
+$/$ pAR $=0.221$, pyesAR $=1-$ pnoAR $=0.779, \mathrm{iAL}=2 \times$ pnoAR $\times 1-$ pnoAR $=0.3$ 45.
+
+And the gain for this split is
+
+$$
+p A \times i A-p A L \times i A L-p A R \times i A R=0.043 .
+$$
+
+In Section 2.9.4, we'll verify these calculations using open source tree software that follows the same CART-like procedure for altered priors.
+
+This wraps our discussion of CART's search for the best split for an ordered variable in classification trees. Before discussing the search for splits on categorical features, I'll introduce the concept of a regression tree; that is, a decision tree with a continuous outcome. 
+
+\subsection{Regression trees}
+
+Up to this point, our discussion of splitting nodes applies primarily to the case of CART-like classification trees. In CART, regression trees are constructed in nearly the same way as classification trees. The only real difference is that rather than finding the predictor/split combination that gives the greatest reduction in the within-node impurity, we look for the predictor/split combination that gives the greatest reduction in node sum of squared errors (SSE):
+
+$\triangle I S, A=S S E A-S S E A L+S S E A R$
+
+where, for example, SSEA $=\sum i=1 N A y i-y^{-}$is the SSE within node $A$; recall that $N_{A}$ is the number of training records in node $A$. This is equivalent to choosing the split that maximizes the between-groups sum-of-squares in an analysis of variance (ANOVA); in fact, in rpart, this split rule is referred to as the "anova" method (see ?rpart::rpart). Note the similarities and differences between Equations (2.3) and $(2.6)$
+
+To speed up the search for the best split, open source implementations, like rpart and scikit-learn's sklearn.tree module, do not directly search for splits that maximize (2.6) directly, but rather an equivalent proxy that's more efficient to compute. For example, it can be shown that
+
+$$
+\text { SSEA }=\text { SSEAL }+ \text { SSEAR+NALNARNAy }{ }^{-} L^{-} y^{-} R 2
+$$
+
+where $\mathrm{y}^{-} L$ and $y^{-} R$ give the sample mean for the left and right child nodes of $A$, respectively. This implies that maximizing (2.6) is equivalent to maximizing the last term in (2.7), which makes sense, since we want the child nodes to be as different as possible (i.e., a greater difference in the mean responses). In the regression case, we don't have to worry about priors or node probabilities. The terminal nodes are summarized by the mean response in each (the sample median is another possibility), and these are used for producing fitted values and predictions. For example, if a new observation $x$ were to occupy some node terminal node $A$, then $\mathrm{f}^{\wedge} \mathrm{x}=\sum \mathrm{i}=1 \mathrm{NAyi}, \mathrm{A} / N A$, where yi,A denotes the $i$-th response value from the learning sample that resides in terminal node $A$.
+
+Aside from being useful in their own right, regression trees, as presented here, serve as the basic building blocks for gradient tree boosting (Chapter 8), one of the most powerful tree-based ensemble algorithms available.
+
+\subsubsection{Example: New York air quality measurements}
+
+Consider, for example, the airquality data frame introduced in Section 1.4.2, which contains daily air quality measurements in New York from May to September of 1973. A regression tree with a single split was fit to the data and the corresponding tree diagram is displayed in the left side of Figure 2.7. Here, the chosen splitter was temperature (in degrees Fahrenheit). Each node displays the predicted ozone concentration for all observations that fall in that node (top number) as well as the proportion of training observations in each (bottom number). According to this tree, the predicted ozone concentration is given by the simple rule:
+
+Ozone $^{\wedge}=26.544$ if Temp<82.575.405 if Temp $>=82.5$. 
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-102.jpg?height=532&width=484&top_left_y=410&top_left_x=386)
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-102.jpg?height=865&width=694&top_left_y=234&top_left_x=1038)
+
+FIGURE 2.7: Decision stump predicting ozone concentration as a function of temperature. Left: tree diagram. Right: estimated regression function; a vertical dashed line is drawn at the split point $\mathrm{c}=82.5$ (the tree diagram on the left rounded up to the nearest integer).
+
+The estimated regression surface is plotted in the right side of Figure 2.7. Note that the estimated prediction surface from a regression tree is essentially a step function, which makes it hard for decision trees to capture arbitrarily smooth or linear response surfaces.
+
+To manually find the first partition and reconstruct the tree in Figure 2.7, we'll start by creating a simple function to calculate the withinnode SSE. Note that these data contain a few missing values ${ }^{f}$ (or NAs in R), so I set na.rm = TRUE in order to remove them before computing the results.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-102.jpg?height=151&width=1108&top_left_y=2078&top_left_x=258)
+
+Next, l'll modify the splits() function from Section 2.2.2 to work for the regression case: 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-103.jpg?height=621&width=1463&top_left_y=238&top_left_x=255)
+
+${ }^{\mathrm{f}}$ CART is actually pretty clever in how it handles missing values in the predictors, but more on this in Section 2.7.
+
+Before applying this function to the air quality data, I'll remove the 37 rows that have a missing response value. The possible split points for Temp, along with their associated gains, are displayed in Figure 2.8. (To make the $y$-axis look nicer on the plot, the gain values were divided by 1,000.)
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-103.jpg?height=639&width=1268&top_left_y=1406&top_left_x=254)
+
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-104.jpg?height=876&width=1433&top_left_y=234&top_left_x=346)
+
+FIGURE 2.8: Potential split points for temperature as a function of gain. The maximum gain occurs at a temperature of $82.5^{\circ} \mathrm{F}$ (the dashed vertical line).
+
+To show that temperature is the best primary splitter for the root node, we can use sapply() to find the optimal cutpoint for all five features.:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-104.jpg?height=422&width=1161&top_left_y=1547&top_left_x=252)
+
+Clearly, the split associated with the largest gain is Temp, followed by Wind, Solar.R, Month, and Day.
+
+A regression tree in one predictor produces a step function, as was seen in the right side of Figure 2.7. The same idea extends to higher dimensions as well. For example, suppose we considered splitting on Wind next. Using the same procedures previously described, we would find that the next best partition occurs in the left child node using Wind with a cutpoint of 7.15 (mph). The corresponding tree diagram is displayed on the left side of Figure 2.9. If we stop splitting here, the result is a regression tree in two features. The corresponding prediction function, displayed on the right side of Figure 2.9 , is a surface that's constant over each terminal node.
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-105.jpg?height=854&width=1392&top_left_y=587&top_left_x=363)
+
+FIGURE 2.9: Regression tree diagram (left) and corresponding regression surface (right) for the air quality data. These are the same splits shown in Figure 2.1. 
+
+\subsection{Categorical splits}
+
+Up to this point, we've only considered splits for ordered predictors, which have the form $x<c$ vs. $x \geq c$, where $c$ is in the domain of $x$. But what about splits involving nominal categorical features? If $x$ is ordinal (i.e., an ordered category, like low i medium i high), then we can map its ordered categories to the integers $1,2, \ldots, J$, where $J$ is the number of unique categories, and split as if $x$ were originally numeric. If $x$ is nominal (i.e., the order of the categories has no meaning), then we have to consider all possible ways to split $x$ into two mutually disjoint groups. For example, if $x$ took on the categories a,b,c, then we could form a total three splits:
+
+- $x \in a$ vs. $x \in b, c$
+
+- $x \in b$ vs. $x \in a, c$;
+
+- $x \in c$ vS. $x \in a, b$.
+
+For a nominal predictor with $J$ categories, there are a total of $2 J-1-1$ potential splits to search through, which can be computationally prohibitive for large $\mathrm{J}$; for $\mathrm{J} \geq 21$, we'd have to search more than a million splits! Fortunately, for ordered or binary outcomes, there is a computational shortcut that can be exploited for the splitting rules discussed in this chapter (i.e., Gini index, entropy, and SSE). This is discussed, for example, in Hastie et al. [2009, Sec. 9.2.4] and the "User Written Split Functions" vignette in package rpart (use vignette("usercode", package = "rpart") at the $R$ console).
+
+In short, the optimal split for a nominal predictor $x$ at some node $A$ can be found by first ordering the individual categories of $x$ by their average response value-for example, the proportion of successes in the binary outcome case-and then finding the best split using this new ordinal variable. 9 This reduces the total number of possible splits from $2 J-1-1$ to $J-1$, an appreciable reduction in the total number of splits that must be searched. It will also still result in the optimal split when using the Gini index, cross-entropy, or SSE splitting rules discussed earlier. A proof for the Gini and entropy measures is provided in Ripley [1996, p. 218], with Chou [1991] providing a proof for a more general family of impurity measures. For multiclass problems (i.e., J>2), no such computational shortcut exists, although efficient search methods have been proposed in Sleumer [1969] and Loh and Vanichsetakul [1988].
+
+9This is equivalent to performing mean/target encoding [Micci-Barreca, 2001] prior to searching for the best split at each node; see Section 2.4.3.
+
+\subsubsection{Example: mushroom edibility}
+
+To illustrate, let's return to the mushroom edibility example, which contains all categorical features and a binary response. A simple classification tree diagram for the data is shown in Figure 2.10. The tree contains two splits on the features odor and spore.print.color. Since the response (Edibility) is binary, we can use the shortcut approach to build the tree using the same process for ordered splits, as long as we apply the Gini or entropy splitting criterion; here, I'll use the Gini index since it's already built into our previously defined find_best_split() function.
+
+Edible
+
+.52 .48
+
+$100 \%$
+
+no odor = creosote, fishy, foul,musty, pungent, spicy yes
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-107.jpg?height=572&width=1324&top_left_y=1720&top_left_x=388)
+
+FIGURE 2.10: Example classification tree for determining the edibility of mushrooms. For each mushroom attribute, the individual categories need to be mapped to the proportion of successes within each. For this example, l'll refer to the outcome class Poison as a success and reencode the target as 0/1 for Edible/Poison. I'll also remove the veil.type feature because it only takes on a single value (i.e., it has zero variance) and can contribute nothing to the partitioning:
+
+m <- treemisc: :mushroom \# load mushroom data
+
+m\$veil.type <- NULL \# remove useless feature
+
+m\$Edibility <- ifelse(m\$Edibility == "Poison", 1, 0)
+
+m2 <- m \# make a copy of the original data
+
+To illustrate the main idea, let's look at a frequency table for the veil.color predictor, which has four unique categories:
+
+table(m2\$veil. color)
+
+\#>
+
+\#> brown orange white yellow
+
+\#> $\quad 96 \quad 96 \quad 7924 \quad 8$
+
+We need to find the mean response within each category-in this case, the proportion of poisonous mushrooms-and then map those back to the original feature values. For instance we would re-encode all the values of "white" in veil.color as 0.493 because $3908 / 7924 \approx 0.493$ of the mushrooms with veil.color = "white" are poisonous. This can be done in any number of ways, and here I'll write a simple function, called ordinalize(), that returns a list with two components: map, which contains the numeric value each category gets mapped to, and encoded, which contains the re-encoded feature values.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-108.jpg?height=460&width=1244&top_left_y=1866&top_left_x=255)
+
+Next, I'll write a simple for loop that uses ordinalize() to numerically re-encode each feature column in the m2 data frame: 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-109.jpg?height=829&width=1478&top_left_y=236&top_left_x=247)
+
+Since all the categorical features have been re-encoded numerically, we can use our previously defined find_best_split() function to partition the data. Starting with the root node (i.e., the full learning sample), we obtain:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-109.jpg?height=858&width=1275&top_left_y=1354&top_left_x=254)
+
+The first split uses odor, with a mean/target encoded split point of $c=0.517$ and a corresponding gain of 0.471 . Since the resulting right child node is pure (in this case, all poisonous), let's continue partitioning with the left one: 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-110.jpg?height=606&width=1424&top_left_y=238&top_left_x=252)
+
+The next split is based on spore.print.color, with a mean/target encoded split point $c=0.538$ and a corresponding gain of 0.017 , which is equivalent to separating mushrooms based on whether or not they have a green spore print.
+
+To map these splits back to their corresponding categories, we can look at the \$map component from the output of ordinalize() on each split variable:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-110.jpg?height=616&width=1163&top_left_y=1367&top_left_x=251)
+
+For example, the split point for odor was 0.517 (the midpoint between 0.0341 .00 ), and every feature mapped to a re-encoded odor value $\geq 0.517$ is used to construct the first partition; see the first split in Figure 2.10. In Section 2.9.2, we'll verify these results (e.g., the computed gain for both splits) using CART-like software in R.
+
+\subsubsection{Be wary of categoricals with high cardinality}
+
+One drawback of CART-like decision trees is that they tend to favor categorical features with high cardinality (i.e., large $J$ ), even if they are mostly irrelevant. ${ }^{h}$ For categorical features with large $J$, for example, there are so many potential splits that the tree is more likely to find a good split just by chance. Think about the extreme case where a nominal feature $x$ is different and unique in every row of the learning sample, like a row ID column. The split variable selection bias in CART-like decision trees has been discussed plenty in the literature; see, for example, Breiman et al. [1984, p. 42), Segal [1988], and Hothorn et al. [2006c] (and the additional references therein)
+
+To illustrate the issue, I added ten random categorical features (cat1cat10) to the airquality data set from Section 2.3.1, each with a cardinality of $\mathrm{J}=26$ (they're just random letters from the alphabet). $A$ default regression tree was fit to the data using rpart, and the resulting tree diagram is displayed in Figure 2.11. Notice that all of the splits, aside from the first, use the completely irrelevant categorical features that were added! In Section 2.5 we'll look at a general pruning technique that can be helpful in screening out pure noise variables.
+
+h This bias actually extends to any predictor with lots of potential split points, whether ordered or nominal.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-111.jpg?height=772&width=1268&top_left_y=1712&top_left_x=426)
+
+FIGURE 2.11: A decision tree fit to a copy of the air quality data set that includes ten completely random categorical features, each with cardinality 26.
+
+In some cases, it's possible to reduce the number of potential categories to something more manageable-like lumping rare categories together, or combining categories into a smaller set of meaningful subgroups (e.g., combining zip or area codes into a smaller set of larger geographic areas).
+
+The partitioning algorithms discussed in Chapters 3-4 address the split selection bias issue more directly by separating the exhaustive search over all possible splits for each feature into two sequential steps, where the optimal split point is found only after a splitting variable has been selected.
+
+\subsubsection{To encode, or not to encode?}
+
+When dealing with categorical data, we are often concerned with how to encode such features. In linear models, for example, we often employ dummy encoding or effect encoding, depending on the task at hand. Similarly, one-hot-encoding $(\mathrm{OHE})$, closely related to dummy encoding, is often used in general machine learning problems outside of (generalized) linear models. And there are plenty of other ways to encode categorical variables, depending on the algorithm and task at hand.
+
+As you've already seen, decision trees can naturally handle variables of any type without special encoding, although we did see that a local form of mean/target encoding can be used to reduce the computational burden imposed by nominal categorical splits. Nonetheless, using an encoding strategy, like OHE, can sometimes improve the predictive performance or interpretability of a tree-based model; see Kuhn and Johnson [2013, Sec. 14.7] for a brief discussion on the use of $\mathrm{OHE}$ in tree-based methods. Further, some tree-based software, like Scikit-learn's sklearn.tree module, require all features to be numeric-forcing users to employ different encoding schemes for categorical features. See Boehmke and Greenwell [2020, Chap. 3] for details on different encoding strategies (with examples in R), and further references. 
+
+\subsection{Building a decision tree}
+
+In the previous sections, we talked about the basics of splitting a node (i.e., partitioning some subset of the learning sample). Building a CART-like decision tree starts by splitting the root node, and then recursively applying the same splitting procedure to every resulting child node until a saturated tree is obtained (i.e., all terminal nodes are pure) or other stopping criteria are met. In essence, the partitioning stops when at least one of the following conditions are met:
+
+- all the terminal nodes are pure;
+
+- the specified maximum tree depth has been reached;
+
+- the minimum number of observations that must exist in a node in order for a split to be attempted has been reached;
+
+- no further splits are able to decrease the overall lack of fit by a specified factor;
+
+- and so forth.
+
+This often results in an overly complex tree structure that overfits the learning sample; that is, it has low bias, but high variance.
+
+To illustrate, consider a random sample of size $\mathrm{N}=500$, generated from the following sine wave with Gaussian noise:
+
+$$
+Y=\sin X+\epsilon
+$$
+
+where $X \sim \cup 0,2 \pi$ and $\epsilon \sim N 0, \sigma=0.3$. A scatterplot of the data, along with the true response function, is shown in Figure 2.12. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-115.jpg?height=881&width=1433&top_left_y=232&top_left_x=346)
+
+FIGURE 2.12: Data generated from a simple sine wave with Gaussian noise. The black curve shows the true mean response $E Y \mid X=x=\sin x$.
+
+Figure 2.13 shows the prediction function from two regression trees fit to the same data.' . The tree on the left is too complex and has too many splits, and exhibits high variance, but low bias (i.e., it fits the current sample well, but the tree structure will vary wildly from one sample to the next because it's mostly fitting the noise here); unstable models, like this one are often referred to as unstable learners (more on this in Section 5.1). The tree on the right, which is a simple decision stump (i.e., a tree with only a single split), is too simple, and will also not be useful for prediction because it has extremely high bias, but low variance (i.e., it doesn't fit the data too well, but the tree structure will be more stable from sample to sample); such a weak performing model is often referred to as a weak learner (more on this in Section 5.2). Overgrown decision tree
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-116.jpg?height=645&width=705&top_left_y=293&top_left_x=344)
+
+Undergrown decision tree
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-116.jpg?height=636&width=699&top_left_y=300&top_left_x=1076)
+
+FIGURE 2.13: Regression trees applied to the sine wave example. Left: this tree is too complex (i.e., low bias and high variance). Right: this tree is too simple (i.e., high bias and low variance).
+
+Neither tree is likely to be accurate when applied to a different sample from the same model; the ensemble methods discussed in Part II of this book can improve the performance of both weak and unstable learners. When using a single decision tree, however, the question we need to answer is, How complex should we make the tree? Ideally, we should have stopped splitting nodes at some subtree along the way, but where?
+
+A rather careless approach is to build a tree by only splitting nodes that meet some threshold on prediction error. However, this is shortsighted because a low-quality split early on may lead to a very good split later in the tree. The standard approach to finding an optimal subtree-basically, determining when we should have stopped splitting nodes-is called cost-complexity pruning, or weakest link pruning [Breiman et al., 1984], or just pruning for short. Other pruning procedures are discussed in Ripley [1996, pp. 226231] and Zhang and Singer [2010, pp. 44-49]. Pruning a decision tree is quite analogous to the process of backward elimination in multiple linear regression-start with a complex tree with too many splits, and prune off leaves whose contributions aren't enough to offset the added complexity. The details are covered in the next section. 'The associated tree diagrams are shown in the top left and bottom right of Figure 2.14 (p. 73), respectively.
+
+\subsubsection{Cost-complexity pruning}
+
+The idea of pruning a decision tree is similar to the process of backward elimination in multiple linear regression. In essence, we build a large tree with too many splits, denoted T0, and then prune it back by collapsing internal nodes until we find some optimal subtree, denoted Topt, that meets a certain criterion, like having the smallest cross-validation error.
+
+Let $A k k=1 \mathrm{~K}$ be the terminal nodes of some tree $\mathrm{T}$, where $|\mathrm{T}|=\mathrm{K}$ is the number of terminal nodes, or size of $T$. Recall that the overall goal of CART is to extract homogenous subgroups (i.e., terminal nodes). In this sense, the overall quality (or risk) of the tree depends on the quality of its terminal nodes. We define the risk of the tree to be $R T=\sum k=1 \mathrm{KpAk} \times r \mathrm{rAk}$, where rAk is some measure of the quality of the $k$-th terminal node; see (2.4) on page 2.4. For regression trees, RT is the error sum of squares (SSE). For classification trees based on the observed class priors and equal misclassification costs (i.e., Li,j=1 for all $i \neq j$ ), RT is simply the proportion of observations misclassified in the learning sample.
+
+Building a tree to minimize RT will always lead to a saturated tree, resulting in a model with little or no bias but often high variance (i.e., overfitting the learning sample). Instead, we penalize the complexity (or size) of the tree by minimizing
+
+$$
+\mathrm{RaT}=\mathrm{RT}+\alpha|\mathrm{T}|
+$$
+
+where $\alpha \geq 0$ is a tuning parameter controlling the trade-off between the complexity of the tree, $|\mathrm{T}|$, and how well it fits the training data, RT. In this sense, $R \alpha T$ can be viewed as a penalized objective function similar to what's used in regularized regression; see, for example, Hastie et al. [2009, Chap. 3] or Boehmke and Greenwell [2020, Chap. 6]. When $\alpha=0$, no penalty is incurred, resulting in the most complex tree T0. On the other extreme, we can always find a large enough value of $\alpha$ that results in a decision tree with no splits (i.e., the root node). Choosing the right value of $\alpha$ is important and can be done using cross-validation or other methods; a specific crossvalidation approach is covered in Section 2.5.2.
+
+Breiman et al. [1984, Chap. 10] showed that for each $\alpha$, there exists a unique smallest subtree, denoted $\mathrm{T \alpha}$, that minimizes RaT. This result is important because it guarantees that no two equally sized subtrees of T0 will have the same value of RaT. To obtain Ta, start pruning T0 by successively collapsing the internal node that produces the smallest per-node increase to $R T$, and continue until reaching the root node. This process results in a (finite) sequence of nested subtrees (see Figure 2.14 on page 73 for an example) that contains Ta; for details, see Breiman et al. [1984, Chap. 10] or Ripley [1996, Sec. 7.2].
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-118.jpg?height=916&width=1475&top_left_y=1228&top_left_x=325)
+
+FIGURE 2.14: Nested subtrees for the sine wave example. The optimal subtree, chosen via 10 -fold cross-validation, is highlighted in green. To illustrate, take T0 to be the left tree in Figure 2.12, which has a total of 154 splits. The corresponding tree diagram is displayed in the top left of Figure 2.14. The rest of the tree diagrams in Figure 2.14 correspond to the last 15 trees in the pruning sequence (minus the root node), ending with a decision stump. The optimal subtree, Ta, which has a total of 20 splits (or 21 terminal nodes), was found using 10 -fold cross-validation and is highlighted in green.
+
+For comparison, I compared how each subtree performed on an independent test set of 500 new observations. For each subtree in the pruned sequence, the prediction error on the test set, measured as $1-R 2$, where $R^{2}$ is the squared Pearson correlation between the observed and fitted values, was computed. Both the test and crossvalidation errors are displayed in Figure 2.15. Here, the results are similar, but the test error suggests a slightly simpler tree with only 18 splits.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-119.jpg?height=805&width=1417&top_left_y=1240&top_left_x=343)
+
+Number of splits
+
+FIGURE 2.15: Relative error based on the test set (black curve) and 10-fold cross-validation (yellow curve) vs. the number of splits for the sine wave example. The vertical yellow line shows the optimal number of splits based on 10 -fold cross-validation, while the vertical black line shows the optimal number of splits based on the independent test set. So how is the sequence of $\alpha$ values determined? For any internal node $A$, we can find $\alpha$ using
+
+$$
+\alpha=R A-R T A|T A|-1,
+$$
+
+where TA is the subtree rooted at node $A$. To start pruning, we need to find the first threshold value $\alpha_{1}$, which is just the smallest $\alpha$ value among the $|\mathrm{T}|-1$ internal nodes of the tree T. Once $\alpha_{1}$ is obtained, we prune the tree by collapsing one of the $|\mathrm{T}|-1$ internal nodes and making it a terminal node whenever
+
+$$
+\alpha 1 \geq R A-R T A|T A|-1 .
+$$
+
+This results in the optimal subtree, Ta1, associated with $\alpha=\alpha 1$. Starting with Ta1, we then continue this process by finding $\alpha_{2}$ in the same way we found $\alpha_{1}$ for the full tree T. The process is continued until reaching the root node. It might sound confusing, but we'll walk through the calculations using the mushroom example in the next section.
+
+The rpart package, which is used extensively throughout this chapter, employs a slightly friendlier, and rescaled, version of the cost-complexity parameter $\alpha$, which they denote as cp. Specifically, rpart uses
+
+$$
+R c p T=R T+c p \times|T| \times R T 1,
+$$
+
+where $\mathrm{T1}$ is the tree with zero splits (i.e., the root node). Compared to $\alpha, c p$ is unitless, and a value of $c p=1$ will always result in a tree with zero splits. The complexity parameter, $c p$, can also be used as a stopping rule during tree construction. In many open source implementations of CART, whenever $c p>0$, any split that does not decrease the overall lack of fit by a factor of $c p$ is not attempted. In a regression tree, for instance, this means that the overall $R^{2}$ must increase by $c p$ at each step for a split to occur. The main idea is to reduce computation time by avoiding potentially unworthy splits. However, this runs the risk of not finding potentially much better splits further down the tree. 
+
+\subsubsection{Example: mushroom edibility}
+
+Let's drive the main ideas home by calculating a few $\alpha$ values to prune a simple tree for the mushroom edibility data. Consider again a simple decision tree for the mushroom edibility data which is displayed in Figure 2.16. This is a simple tree with only three splits, but we'll use it to illustrate how pruning works and how the sequence of $\alpha$ values is computed. For clarity, the number of observations in each class is displayed within each node, and the node numbers appear at the top of each node. For example, node 8 contains 4208 edible mushrooms and 24 poisonous ones. The assigned classification, or majority class, is printed above the class frequencies in each node. This tree was also built using the observed class priors and equal misclassification costs; hence, RT is just the proportion of misclassifications in the learning sample: $24 / 8124 \approx 0.003$.
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-121.jpg?height=774&width=856&top_left_y=1240&top_left_x=857)
+
+FIGURE 2.16: Classification tree with three splits for the mushroom edibility data. The overall risk of the tree is $24 / 8124 \approx 0.003$.
+
+Let $A_{i}$, iE1,2,3,4,5,8,9 denote the seven nodes of the tree in Figure 2.16; in rpart, the left and right child nodes for any node numbered $x$ are always numbered $2 x$ and $2 x+1$, respectively (the root node always corresponds to $x=1$ ). We can compute the risk of any terminal node using $\mathrm{RAi}=\mathrm{Nj}, \mathrm{A} / \mathrm{NA}$. For example, nodes $A_{5}-A_{7}$ all have a risk of zero (since they are pure nodes).
+
+To find $\alpha_{1}$, we need to first compute $\alpha$ for each of the |TO|-1=3 internal nodes of the tree, and find which one is the smallest; use the tree diagram in Figure 2.16 to follow along. The $\alpha$ values for the three internal nodes are computed as follows:
+
+$$
+\begin{gathered}
+\alpha \mathrm{A} 1=3916 / 8124-24 / 8124 / 4-1 \approx 0.160 \alpha \mathrm{A} 2=120 / 8124-24 / 8124 / 3-1 \approx 0 . \\
+006 \alpha \mathrm{A} 4=48 / 8124-24 / 8124 / 2-1 \approx 0.003 .
+\end{gathered}
+$$
+
+Since aA4 is the smallest, we collapse node $A_{4}$, resulting in the next optimal subtree in the sequence, Ta1, which is displayed in the left side of Figure 2.17. The cost-complexity of this tree is Ra1Ta1= 0.015 . To find $\alpha_{2}$, we start with T $\alpha 1$ and repeat the process by first finding the smallest $\alpha$ value associated with the $\mid$ Ta1|-1=2 internal nodes of Ta1. These are given by
+
+$$
+\begin{gathered}
+\alpha \mathrm{A} 1=3916 / 8124-48 / 8124 / 3-1 \approx 0.238 \alpha \mathrm{A} 2=120 / 8124-48 / 8124 / 2-1 \approx 0 . \\
+009,
+\end{gathered}
+$$
+
+making $\alpha 2=0.009$. We would then prune the current subtree, Ta2, by collapsing $A_{2}$ into a terminal node, resulting in the decision stump displayed in the right side of Figure 2.17. This makes only one possibility for $\alpha 3=3916 / 8124-120 / 8124 / 2-1 \approx 0.467$, which results in the root node after pruning the decision stump, Ta3. In the end, we have the following sequence of $\alpha$ values: $\alpha 1=0.003, \alpha 2=0.009, \alpha 3=0.467$. In practice, we would use crossvalidation, or some other validation procedure, to select a reasonable value of the complexity parameter $\alpha$ from this sequence. The next two sections discuss choosing $\alpha$ using $k$-fold cross-validation. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-123.jpg?height=751&width=1377&top_left_y=234&top_left_x=366)
+
+FIGURE 2.17: Optimal subtrees in the sequence with minimum costcomplexity. Since the original tree contains only three splits, there are only two possible subtrees, not counting the tree with zero splits. Here the category names have been truncated to three letters to fit more compactly in the display.
+
+\subsubsection{Cross-validation}
+
+Once the sequence $\alpha 1, \alpha 2, \ldots, \alpha k-1$ has been found, we still need to estimate the overall risk/quality of the corresponding sequence of nested subtrees, RaiT, for $\mathrm{i}=1,2, \ldots, \mathrm{k}-1$. Breiman et al. [1984, Chap. 11] suggested picking $\alpha$ using a separate validation set or $k$-fold cross-validation. The latter is more computational, but tends to be preferred since it makes use of all available data, and both tend to lead to similar results. The procedure described in Algorithm 2.1 below follows the implementation in the rpart package in $R$ (see the "Introduction to Rpart" vignette): Algorithm 2.1 $K$-fold cross-validation for cost-complexity pruning.
+
+1) Fit the full model to the learning sample to obtain $\alpha_{1}, \alpha_{2}, \ldots, \alpha_{k-1}$.
+
+2) Define $\beta_{i}$ according to
+
+$$
+\beta_{i}= \begin{cases}0 & i=1 \\ \sqrt{\alpha_{i-1} \alpha_{i}} & i=2,3, \ldots, m-1 . \\ \infty & i=m\end{cases}
+$$
+
+Since any value of $\alpha$ in the interval $\left(\alpha_{i}, \alpha_{i+1}\right]$ results in the same subtree, we instead consider the sequence of $\beta_{i}$ 's, which represent typical values within each range using the geometric midpoint.
+
+3) Divide the data into $k$ groups (or folds), $D_{1}, D_{2}, \ldots, D_{k}$, with approximately $k / N$ observations in each $(N$ being the number of rows in the learning sample). For $i=1,2, \ldots, k$, do the following:
+
+a) Fit the full model to the learning sample, but omit the subset $D_{i}$, and find the sequence of optimal subtrees $\mathcal{T}_{\beta_{1}}, \mathcal{T}_{\beta_{2}}, \ldots, \mathcal{T}_{\beta_{k}}$.
+
+b) Compute the prediction error from each tree on the validation set $D_{i}$.
+
+4) For each subtree, aggregate the results by averaging the $k$ out-of-sample prediction errors.
+
+5) Return $\mathcal{T}_{\beta}$ from the initial sequence of trees based on the full learning sample, where $\beta$ corresponds to the $\beta_{i}$ associated with the smallest prediction error in step 4).
+
+\subsubsection{The 1-SE rule}
+
+When choosing $\alpha$ with $k$-fold cross-validation, Breiman et al. [1984, Sec. 3.4.3] recommend using the 1-SE rule, and argue that it is useful in screening out irrelevant features. The 1-SE rule suggests using the most parsimonious tree (i.e., the one with fewest splits) whose cross-validation error is no more than one standard error above the cross-validation error of the best model. This of course requires an estimate of the standard error during cross-validation. A heuristic estimate of the standard error can be found in Breiman et al. [1984, pp. 306-309] or Zhang and Singer [2010, pp. 42-43], but the formula isn't pretty! Applying cost-complexity pruning using crossvalidation, with or without the 1-SE rule, would almost surely remove all of the nonsensical splits seen in Figure 2.11. (In fact, this was the case after applying 10-fold cross-validation using the 1-SE rule.) 
+
+\subsection{Hyperparameters and tuning}
+
+There are essentially three hyperparameters associated with CARTlike decision trees:
+1) the maximum depth or number of splits;
+2) the maximum size of any terminal node;
+3) the cost-complexity parameter $c p$.
+
+Different software will have different names for these parameters and different default values. Arguably, $c p$ is the most flexible and important tuning parameter in CART, and a good strategy is to relax the maximum depth and size of the terminal nodes as much as possible, and use cost-complexity pruning to find an optimal subtree using $k$-fold cross-validation, or some other validation procedure. In some cases, Chapter 7 , for example, trees are intentionally grown to maximal or near maximal depth (in some cases, leaving only a single observation in each terminal node). 
+
+\subsection{Missing data and surrogate splits}
+
+One of the best features of CART is the flexibility with which missing values can be handled. More traditional statistical models, like linear or logistic regression, will often discard any observations with missing values. CART, through the use of surrogate splits, can utilize all observations that have non-missing response values and at least one non-missing value for the predictors. Surrogate splits are essentially splits using other available features with non-missing values. The basic idea, which is fully described in Breiman et al. [1984, Sec. 5.3], is to estimate (or impute) the missing data point using the other available features.
+
+Consider the decision stump in Figure 2.18, which corresponds to the optimal tree for the Swiss banknote data when using all available features.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-127.jpg?height=635&width=984&top_left_y=1260&top_left_x=573)
+
+FIGURE 2.18: Decision stump for the Swiss banknote example.
+
+What if we wanted to classify a new observation which had a missing value for diagonal? The surrogate approach finds surrogate variables for the missing splitter by building decision stumps, one for each of the other features (in this case, length, left, right, bottom, and top), to predict the binary response, denoted below by $y^{\star}$, formed by the original split: 
+
+\section{$y \star=0 \quad$ if diagonal $\geq 140.651 \quad$ if diagonal $<140.65$.}
+
+For each feature, the optimal split is chosen using the procedure described in Section 2.2.1. (Note that when looking for surrogates, we do not bother to incorporate priors or losses since none are defined for $y^{\star}$.) In addition to the optimal split for each feature, we also consider the majority rule, which just uses the majority class. Once the surrogates have been determined, they're ranked in terms of misclassification error, and any surrogate that does worse than the majority class is discarded. Some implementations, like R's rpart package, further require surrogate splits to send at least two observations to each of the left and right child nodes.
+
+Returning to the Swiss banknote example, let's find the surrogate splits for the primary split on diagonal depicted in Figure 2.18. We can find the surrogate splits using the same splitting process as before, albeit with our new target variable $y^{\star}$ :
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-128.jpg?height=612&width=1222&top_left_y=1274&top_left_x=255)
+
+In this case, the ranked surrogate splits-in descending order of importance-are bottom, right, top, left, and length; the corresponding split points for each are also shown in the output (we'll verify these results in Section 2.9 using real tree software). If we were to use the decision stump in Figure 2.18 to classify a new banknote with a missing value for diagonal, the tree would use the next best surrogate split instead (in this case, whether or not bottom $>=9.550)$. For each surrogate, we could also compute its agreement and adjusted agreement with the primary split, which are used in rpart's definition of variable importance (Section 2.8). The agreement between a primary split and its surrogate is just the proportion of observations they send in the same direction. The adjusted agreement adjusts this proportion by subtracting the number of observations sent one way or another using the majority rule. An example is given in Section 2.9.
+
+\subsubsection{Other missing value strategies}
+
+Aside from being able to handle missing predictor values directly, classification trees can be extremely useful in examining patterns of missing data [Harrell, 2015, Sec. 3.2]. For example, CART can be used to describe observations that tend to have missing values (a description problem). This can be done by growing a classification tree using a target variable that's just a binary indicator for whether or not a variable of interest is missing; see Harrell [2015, pp. 302-304] for an example using real data in $\mathrm{R}$.
+
+It can also be informative to construct missing value indicators for each predictor under consideration. Imagine, for example, that you work for a bank and that part of your job is to help determine who should be denied for a loan and who should not. A missing credit score on a particular loan application might be an obvious red flag, and indicative of somebody with a bad credit history, hence, an important indicator in determining whether or not to approve them for a loan. A similar strategy for categorical variables is to treat missing values as an actual category. As noted in van Buuren [2018, Sec. 1.3.7], the missing value indicator method may have its uses in particular situations but fails as a generic method to handle missing data (e.g., it does not allow for missing data in the response and can lead to biased regression estimates across a wide range of scenarios).
+
+Imputation-filling in missing values with a reasonable guess-is another common strategy, and trees make great candidates for imputation models (e.g., they're fully nonparametric and naturally support both classification and regression).
+
+Using CART for the purpose of missing value imputation has been suggested by several authors; see van Buuren [2018, Sec. 3.5] for details and several references. A generally useful approach is to use CART to generate multiple imputations [van Buuren, 2018, Sec. 3.5] via the bootstrap methodj [see Davison and Hinkley [1997] for an overview of different bootstrap methods); multiple imputation is now widely accepted as one of the best general methods for dealing with incomplete data [van Buuren, 2018, Sec. 2.1.2].
+
+The basic steps are outlined in Algorithm 2.2; also see ?mice::cart for details on its implementation in the mice package [van Buuren and Groothuis-Oudshoorn, 2021]. Here, it is assumed that the response $y$ corresponds to the predictor with incomplete observations (i.e., contains missing values) and that the predictors correspond to the original predictors with complete information (i.e., no missing values).
+
+As described in Doove et al. [2014] and van Buuren [2018, Sec. 3.5], this process can be repeated $m$ times using the bootstrap to produce $m$ imputed data sets. As noted in van Buuren [2018, Sec. 3.5], Algorithm 2.2 is a form of predictive mean matching [van Buuren, 2018, Sec. 3.4], where the "predictive mean" is instead calculated by CART, as opposed to a regression model. An example using CART for multiple imputation is provided in Section 7.9.3.
+
+JUnless stated otherwise, a bootstrap sample refers to a random sample of size $N$ with replacement from a set of $N$ observations; hence, some of the original obervations will be sampled more than once and some not at all.
+
+But what if you're using a decision tree as the model, and not just as a means for imputation: should you rely on surrogate splits or a different strategy, like imputation? Feelders [2000] suggests that imputation (especially multiple imputation), if done properly, tends to outperform trees based on surrogate splits. However, one should still consider whether or not the potential for improved performance outweighs the additional effort required in specifying an appropriate imputation scheme. Feelders further notes that with "...moderate amounts of missing data (say $10 \%$ or less) one can avoid generating imputations and just use surrogate splits."
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-131.jpg?height=555&width=1471&top_left_y=476&top_left_x=327)
+
+
+
+\subsection{Variable importance}
+
+In practice, it may be useful, or even necessary, to reduce the number of features in a model. One way to accomplish this is to rank them in some order of importance and use a subset of the top features. Loh [2012] showed that using a subset of only the important variables can lead to increased prediction accuracy. Reducing the number of features can also decrease model training time and increase interpretability. However, lack of a proper definition of "importance" has led to many variable importance measures being proposed; see Greenwell and Boehmke [2020] for some discussion and further references.
+
+Decision trees probably offer the most natural model-specific approach to quantifying the importance of predictors. In a binary decision tree, at each node $A$, a single predictor is used to partition the data into two homogeneous groups. The chosen predictor is the one that maximizes (2.3). The relative importance of predictor $x$ is the sum of the squared improvements over all internal nodes of the tree for which $x$ was chosen as the primary splitter; see Breiman et al. [1984] for details. This idea also extends to regression trees and ensembles of decision trees, such as those discussed in Chapters 58.
+
+When surrogate splits are enabled, they can be accounted for in the quantification of variable importance. In particular, a variable may appear in the tree more than once, either as a primary or surrogate splitter. The variable importance measure for a feature is the sum of the gains associated with each split for which it was the primary variable, plus the gains (adjusted for agreement) associated with each split for which it was a surrogate. The notation is a bit involved, but the interested reader is pointed to Loh and Zhou [2021, Sec. 3].
+
+Including surrogate information can help improve interpretation when you have strongly correlated or redundant features. For instance, imagine two features $x_{1}$ and $x_{2}$ that are essentially redundant. If we only counted gains where each variable was a primary splitter, these two features would likely split the importance, with neither showing up as important as they should. Comparing the variable importance rankings with and without competing splitters (i.e., non-primary splitters) can also be informative. Variables that appear to be important, but rarely split nodes, are probably highly correlated with the primary splitters and contain very similar information.
+
+The relative variable importance standardizes the raw importance values for ease of interpretation. The relative importance is typically defined as the percent improvement with respect to the most important predictor, and is often reported in statistical software. The relative importance of the most important feature is always $100 \%$. So, if $x_{3}$ is the most important feature, and the relative importance of another feature, say $x_{5}$, is $83 \%$, you can say that $x_{5}$ is roughly $83 \%$ as important as $x_{3}$.
+
+It is well known, however, that CART-like variable importance scores are biased; see Loh and Zhou [2021] for a thorough (and more recent) review. According to Loh and Zhou, a variable importance procedure is said to be unbiased if all predictors have the same mean importance score when they are independent of the response. Solutions to CART's variable importance bias, which really stems from CART's split selection bias (Section 2.4.2), are discussed in several places throughout this book; see, for example, the discussion in Section 7.5.1. 
+
+\subsection{Software and examples}
+
+Packages rpart and tree [Ripley, 2021] provide modern implementations of the CART algorithm in R, although rpart is recommended over tree, and so we won't be discussing the latter. The name rpart comes from the acronym for (binary) Recursive PARTitioning. Beyond simple classification and regression trees, rpart can also be used to model Poisson counts (e.g., the number of occurrences of some event per unit of time), and censored outcomes. Note that rpart is extendable ${ }^{k}$ and several $R$ packages on CRAN extend rpart in various ways. For example, rpartScore [Galimberti et al., 2012] can be used to build classification trees for ordinal responses within the same CART-like framework, and rpart.LAD [Dlugosz, 2020] can be used to fit regression trees based on least absolute deviation [Breiman et al., 1984, Sec. 8.11]. The treemisc package provides some utility functions to support rpart, for example, to implement pruning based on the 1-SE rule (Section 2.5.2.1). The $R$ package treevalues [Neufeld, 2022] can be used to construct confidence intervals and $p$-values for the mean response within a node or the difference in mean response between two nodes in a CART-like regression tree (built using the package rpart); see [Neufeld et al., 2021] for details.
+
+CART-like decision trees are implemented in many other open source languages as well. Scikit-learn's sklearn.tree module offers extensive decision tree functionality, but doesn't support categorical features, unless they've been numerically re-encoded. The DecisionTree.jl package for Julia provides an implementation of CART and random forest (Chapter 7), but is rather limited in terms of features, especially when compared to $R$ and Python's tree libraries. Decision trees are also implemented in Spark MLlib [Meng et al., 2016], Spark's open-source distributed machine learning library. ${ }^{m}$
+
+The following examples illustrate the basic use of rpart for building decision trees. We'll confirm the results we computed manually in previous sections as well as construct decision trees for new data sets. An excellent case study using decision trees in $R$ to identify email spam is provided in Nolan and Lang [2015, Chapter 3].
+
+\subsubsection{Example: Swiss banknotes}
+
+In Section 2.2.2, I restricted my attention to just two predictors, top and bottom, and walked through the steps of constructing a two-split tree by hand (i.e., a tree with three terminal nodes). Here, l'll use the rpart package to reconstruct the same tree and to confirm my previous split calculations.
+
+By default, rpart uses the Gini splitting rule, equal misclassification costs, and the observed class priors ${ }^{n}$ when building a classification tree; hence, we do not need to set any additional arguments (we'll do that in the next section). However, for ease of interpretation, l'll reencode the outcome y from 0/1 to Genuine/Counterfeit:
+
+kAs described in the "User Written Split Functions" vignette; see vignette("usercode", package $=$ "rpart") for details.
+
+Ihttps://github.com/bensadeghi/DecisionTree.jl.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-135.jpg?height=60&width=1561&top_left_y=1477&top_left_x=301)
+in Section 7.9.5.
+
+${ }^{n}$ Note that the balanced nature of these data is not very realistic, unless roughly half the Swiss banknotes truly are counterfeit. However, without any additional information about the true class priors, there's not much that can be done here. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-136.jpg?height=892&width=1333&top_left_y=237&top_left_x=253)
+
+Note that this is the same tree that was displayed in Figure 2.2 ( $p$. 2.2). The output from printing an "rpart" object can seem intimidating at first, especially for large trees, so let's take a closer look. The output is split into three sections. The first section gives $N$, the number of rows in the learning sample (or root node). The middle section, starting with node), indicates the format of the tree structure that follows. The last section, starting at 1), provides a a brief summary of the tree structure. All the nodes of the tree are numbered, with 1) indicating the root node and lines ending with a * indicating the terminal nodes. The topology of the tree is conveyed through indented lines; for example, nodes 2) and 3) are nested within 1); the left and right child nodes for any node numbered $x$ are always numbered $2 x$ and $2 x+1$, respectively.
+
+For each node we can also see the split that was used, the number of observations it captured, the deviance or loss (in this case, the number of observations misclassified in that node), the fitted value (in this case, the classification given to observations in that node), and the proportion of each class in the node. Take node 2), for example. This is a terminal node, the left child of node 1), and contains 88 of the $\mathrm{N}=200$ observations (two of which are genuine banknotes). Any observation landing in node 2) will be classified as counterfeit with a predicted probability of 0.977 .
+
+O could leave the response numerically encoded as $0 / 1$, but then I would need to tell rpart to treat this as a classification problem by setting method = "class" in the call to rpart().
+
+If you want even more verbose output, with details about each split, you can use the summary() method: summary(bn.tree) \# print more verbose tree summary
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-138.jpg?height=2160&width=1374&top_left_y=306&top_left_x=251)
+
+Here, we can see each primary splitter, along with its corresponding split point and gain (i.e., a measure of the quality of the split). For example, using bottom $<9.55$ yielded the greatest improvement and was selected as the first primary split. The reported improvement (improve $=71.59091$ ) is $N \times \Delta \mid s, A$, hence why it differs from the output of our previously defined splits() function, which just uses $\Delta \mathrm{ls}, A$; but you can check the math: $71.59091 / 200=0.358$, which is the same value we obtained by hand back in Section 2.2.2. Woot!
+
+Before continuing, let's refit the tree using all available features:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-139.jpg?height=1653&width=1443&top_left_y=847&top_left_x=251)
+
+
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-140.jpg?height=294&width=1325&top_left_y=239&top_left_x=256)
+
+Using all the predictors results in the same decision stump that was displayed in Figure 2.18. As it turns out, the best tree uses a single split on the length of the diagonal (in mm) and only misclassifies two of the genuine banknotes in the learning sample. In addition to the chosen splitter, diagonal, we also see a description of the competing splits (four by default) and surrogate splits (five by default); note that these match the surrogate splits I found manually back in Section 2.7. For example, if I didn't include diagonal as a potential feature, then bottom would've been selected as the primary splitter because it gave the next best reduction to weighted impurity (improve $=71.59091$ ).
+
+While the rpart package provides plot() and text() methods for plotting and labeling tree diagrams, respectively, the resulting figures are not as polished as those produced by other packages; for example, rpart.plot [Milborrow, 2021b] and partykit [Hothorn and Zeileis, 2021]. All the tree diagrams in this chapter were constructed using a simple wrapper function around rpart.plot() called tree_diagram(), which is part of treemisc; see ?rpart.plot::rpart.plot and ?treemisc::tree_diagram for details. For example, the tree diagram from Figure 2.2 (p. 43) can be constructed using:
+
+treemisc: :tree_diagram(bn.tree)
+
+Figure 2.19 shows a tree diagram depicting the primary split (left) as well as the second best surrogate split (right). In the printout from summary(), we also see the computed agreement and adjusted agreement for each surrogate. From Figure 2.19, we can see that the surrogate sends $66+91) / 200 \approx 0.785$ of the observations in the same direction as the primary split (agreement). The majority rule gets 102 correct, giving an adjusted agreement of $66+91-102) / 200-102 \approx 0.561$. 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-141.jpg?height=632&width=1390&top_left_y=234&top_left_x=365)
+
+FIGURE 2.19: Decision stump for the Swiss banknote example (left) and one of the surrogate splits (right).
+
+\subsubsection{Example: mushroom edibility}
+
+In this section, we'll use rpart to fit a classification tree to the mushroom data, and explore a bit more of the output and fitting process. Recall from Section 1.4.4, that the overall objective is to find a simple rule of thumb (if possible) for avoiding potentially poisonous mushrooms. For now, l'll stick with rpart's defaults (e.g., the splitting rule is the Gini index), but set complexity parameter, $c p$, to zero $(\mathrm{cp}=$ $0)$ for a more complex tree. ${ }^{p}$ Although the tree construction itself is not random, the internal cross-validation results are, so l'll also set the random number seed before calling rpart(): 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-142.jpg?height=1262&width=1487&top_left_y=235&top_left_x=251)
+
+$p_{\text {The default setting in rpart is } \mathrm{cp}}=0.01$
+
+This is a complex tree with many splits, so let's use treemisc's tree_diagram() function to plot it (see Figure 2.20).
+
+tree_diagram(mushroom.tree) \# Figure 2.20 
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-143.jpg?height=775&width=1309&top_left_y=236&top_left_x=403)
+
+FIGURE 2.20: Decision tree diagram for classifying the edibility of mushrooms.
+
+Setting $\mathrm{cp}=0$ won't necessarily result in the most complex or saturated tree. This is because rpart() sets a number of additional parameters by default, many of which help control the maximum size of the tree; these are printed below for the current mushroom.tree object. For instance, minsplit, which defaults to 20, controls the number of observations that must exist in a node before a split can be attempted.
+
+unlist (mushroom.tree\$control)
+
+$\begin{array}{lrrr}\text { \#> } & \text { minsplit } & \text { minbucket } & \mathrm{cp} \\ \text { \#> } & 20 & 7 & 0 \\ \text { \#> } & \text { maxcompete } & \text { maxsurrogate } & \text { usesurrogate } \\ \text { \#> } & 4 & 5 & 2 \\ \text { \#> surrogatestyle } & \text { maxdepth } & \text { xval } \\ \text { \#> } & 0 & 30 & 10\end{array}$
+
+You can change any of these parameters via rpart()'s control argument, or by passing them directly to $\operatorname{rpart}()$ via the ... (pronounced dot-dot-dot) argument. 9 For example, the two calls to rpart() below are equivalent. Each one fits a classification tree but changes the default complexity parameter from 0.01 to $0(\mathrm{cp}=0)$ and the number of internal cross-validations from ten to five $(x v a l=5)$; see ?rpart::rpart.control for further details about all the configurable parameters.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-144.jpg?height=150&width=1380&top_left_y=384&top_left_x=256)
+
+Another useful option in rpart() is the parms argument, which controls how nodes are split in the treer; it must be a named list whenever supplied. Below we print the tree\$parms component, which in this case is a list containing the class priors, loss matrix, and impurity function used in constructing the tree.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-144.jpg?height=604&width=405&top_left_y=899&top_left_x=252)
+
+The \$prior component defaults to the class frequencies in the root node, which can easily be verified:
+
+proportions(table(mushroom\$Edibility)) \# observed class proportions
+
+\#>
+
+\#> Edible Poison
+
+\#> $0.518 \quad 0.482$
+
+$\mathrm{q}_{\text {In }} \mathrm{R}$, functions can have a special ... argument that allows them to take any number of additional arguments; see Wickham [2019, Sec. 6.6] for details.
+
+${ }^{r}$ The parms argument only applies to response variables that are categorical (classification trees), counts (Poisson regression), or censored (survival analysis)
+
+The loss matrix, given by component \$loss, defaults to equal losses for false positives and false negatives (the off diagonals); there's no loss associated with a correct classification (i.e., the diagonal entries are always zero). The $\$$ split component displays either a 1 (split = "gini") or 2 (split = "information") (partial matching is allowed). All of these can be changed from their respective defaults by passing a named list to the parms argument in the call to rpart(). For example, to use the entropy splitting rule ${ }^{t}$, run the following:
+
+parms <- list("split" = "information") \# use cross-entropy split rule
+
+rpart (Edibility $\sim$, data $=$ mushroom, parms = parms $)$
+
+Specifying a loss matrix in rpart isn't well-documented, unfortunately. For binary outcomes, the matrix has the following structure:
+
+$$
+\mathrm{L}=\text { TPFPFNTN, }
+$$
+
+where rows represent the observed classes and columns represent the assigned classes. Here, TP, FP, FN, and TN stand for true positive, false positive, false negative, and true negative, respectively; for example, a false negative is the case in which the tree misclassifies a 1 as a 0 . The order of the rows/columns correspond to the same order as the categories when sorted alphabetically or numerically.
+
+Since there is no cost for correct classification, we take $T P=T N=0$. Setting FP=FN=c, for some constant $c$ (i.e., treat FPs and FNs equally), will always result in the same splits (although, the internal statistics used in selecting the splits will be scaled differently). When misclassification costs are not equal, specify the appropriate values in the loss matrix. For example, the following tree would treat false negatives (i.e., misclassifying poisonous mushrooms as edible) as five times more costly than false positives (i.e., misclassifying edible mushrooms as poisonous). We could also obtain the same tree by computing the altered priors based on this loss matrix and supplying them via the parms argument, but this is left as an exercise to the reader.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-145.jpg?height=157&width=1355&top_left_y=2144&top_left_x=255)
+
+The variable importance scores (Section 2.8) are contained in the \$variable.importance component of the mushroom.tree object; they're also printed at the top of the output from summary(), but rescaled to sum to 100 .
+
+s In rpart, setting split = "information" corresponds to using the cross-entropy split rule discussed in Section 2.2.1.
+
+tUsers can also supply their own custom splitting rules. The steps for doing so are well documented in rpart's vignette on "User Written Split Functions": utils::vignette("usercode", package $=$ "rpart")
+
+mushroom.tree\$variable.importance
+
+\begin{tabular}{|c|c|c|}
+\hline \#> & odor & spore.print.color \\
+\hline \#> & 3823.407 & 2834.187 \\
+\hline \#> & gill. color & stalk.surface.above.ring \\
+\hline \#> & 2322.460 & 2035.816 \\
+\hline \#> & stalk. surface.below.ring & ring.type \\
+\hline \#> & 2030.555 & 2026.526 \\
+\hline \#> & stalk.color.below.ring & stalk.root \\
+\hline \#> & 53.933 & 25.600 \\
+\hline \#> & stalk. color.above.ring & veil.color \\
+\hline \#> & 17.546 & 16.315 \\
+\hline \#> & cap.surface & cap. color \\
+\hline \#> & 15.360 & 14.032 \\
+\hline \#> & habitat & cap. shape \\
+\hline \#> & 13.409 & 3.840 \\
+\hline \#> & gill.attachment & \\
+\hline$\#>$ & 0.585 & \\
+\hline
+\end{tabular}
+
+In many cases, predictors that weren't used in the tree will have a non-zero importance score. The reason is that surrogate splits are also incorporated into the calculation. In particular, a variable may effectively appear in the tree more than once, either as a primary or surrogate splitter. The variable importance measure for a particular feature is the sum of the gains associated with each split for which it was the primary variable, plus the gains (adjusted for agreement) associated with each split for which it was a surrogate. You can turn off surrogates by setting maxsurrogate $=0$ in rpart.control().
+
+How does k-fold cross-validation (Section 2.5.2) in rpart work? The rpart() function does internal 10-fold cross-validation by default. According to rpart's documentation, 10-fold cross-validation is a reasonable default, and has been shown to be very reliable for screening out "pure noise" features. The number of folds $(k)$ can be changed, however, using the xval argument in rpart.control().
+
+You can visualize the cross-validation results of an "rpart" object using plotcp(), as illustrated in Figure 2.21 for the mushroom.tree object. A good rule of thumb in choosing $\mathrm{cp}$ for pruning is to use the leftmost value for which the average cross-validation score lies below the horizontal line; this coincides with the 1-SE rule discussed in Section 2.5.2.1. The columns labeled "xerror" and "xstd" provide the cross-validated risk and its corresponding standard error, respectively (Section 2.5$)$.
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-147.jpg?height=497&width=1305&top_left_y=908&top_left_x=256)
+
+number of splits
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-147.jpg?height=761&width=1433&top_left_y=1533&top_left_x=346)
+
+FIGURE 2.21: Cross-validation results from the fitted mushroom.tree object. A good choice of $c p$ for pruning is often the leftmost value for which the mean lies below the horizontal line; this corresponds to the optimum value based on the 1-SE rule.
+
+Don't be confused by the fact that the $c p$ values between printcp() (and hence the \$cptable component of an "rpart" object) and plotcp() don't match. The latter just plots the geometric means of the CP column listed in printcp() (these relate to the $\beta_{i}$ values used in the $k$ fold cross-validation procedure described in Section 2.5). Any $c p$ value between two consecutive rows will produce the same tree. For instance, any $c p$ value between 0.002 and 0.001 will produce a tree with five splits. Also, these correspond to a scaled version of the complexity values $\alpha_{i}$ from Section 2.5. Note that rpart scales the CP column, as well as the error columns, by a factor inversely proportional to the risk of the root node, so that the associated training error ("rel error") for the root node is always one (i.e., the first row in the table); which in this case is $1 / 3916 / 8124 \approx 2.075$. Dividing through by this scaling factor should return the raw $\alpha_{i}$ values; the first three correspond to the values I computed by hand back in Section 2.5
+
+mushroom.tree\$cptable [1L:3L, "CP"]/(8124 / 3916)
+
+\#> $1 \quad 2 \quad 3$
+
+$\#>0.467260 .008860 .00295$
+
+Consequently, setting $\mathrm{cp}=1$ will always result in a tree with no splits. The default, $\mathrm{cp}=0.01$, has been shown to be useful at "pre-pruning" the trees in a way such that the cross-validation step results in only the removal of 1-2 layers, although it can also occasionally overprune. In practice, it seems best to set $\mathrm{cp}=0$, or some other number smaller than the default, and use the cross-validation results to choose an optimal subtree.
+
+Using the 1-SE rule would suggest a tree with 5 , or possibly 7 , splits. However, since our main objective is to construct a simple rule-ofthumb for classifying the edibility of mushrooms, it seems like the simpler model with only a single split (i.e., a decision stump) will suffice; it only misclassifies $3 \%$ of the poisonous mushrooms as edible. To prune an rpart tree, use the prune() function with a specified value of the complexity parameter:
+
+tree_diagram (prune(mushroom.tree, $c p=0.1$ )) \# Figure 2.22
+
+The tree diagram displayed in Figure 2.22 provides us with a handy rule of thumb for classifying mushrooms as either edible or poisonous. If the mushroom smells fishy, foul, musty, pungent, spicy, or like creosote, it's likely poisonous. In other words, if it smells bad, don't eat it!
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-149.jpg?height=614&width=1094&top_left_y=831&top_left_x=512)
+
+FIGURE 2.22: Decision tree diagram for classifying the edibility of mushrooms; in this case, the result is a decision stump.
+
+\subsubsection{Example: predicting home prices}
+
+In this section, l'll use rpart to build a regression to the Ames housing data (Section 1.4.7). I'll also show how to easily prune an rpart tree using the 1-SE rule via treemisc's prune_se() function. The code chunk below loads in the data before splitting it into train/test sets using a 70/30 split:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-149.jpg?height=296&width=1316&top_left_y=2101&top_left_x=255)
+
+Next, l'll intentionally fit an overgrown regression tree by setting $\mathrm{cp}=$ 0 ; in a regression tree, rpart will not attempt a split unless it increases the overall $R^{2}$ by $\mathrm{cp}$, so setting $\mathrm{cp}=0$ will cause the tree to continue splitting until some other stopping criterion is met, such as minimum node size (in rpart, the default minimum number of observations that must exist in a node in order for a split to be attempted is 20). I'll also compare the RMSE between the train and test sets:
+
+![](https://cdn.mathpix.com/cropped/2023_04_08_9c57e89b85b7e191793eg-150.jpg?height=901&width=1461&top_left_y=744&top_left_x=255)
+
+The tree is likely overfitting, as indicated by the relatively large discrepancy between the train and test RMSE. Let's see if pruning the tree can help. The prune_se() function from treemisc can be used to prune rpart trees using the 1-SE rule, as illustrated below:
+
+ames.tree.1se <- prune_se(ames.tree, se = 1) \# prune using 1-sE rule
+
+\# Train RMSE on pruned tree 
