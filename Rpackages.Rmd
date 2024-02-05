@@ -1,0 +1,43 @@
+---
+title: "R packges"
+output: html_document
+date: "2023-06-12"
+---
+
+```{r}
+installPackages <- function (myRPackage){
+  if(require(myRPackage, character.only=TRUE)){
+    cat("Package ", myRPackage, "is already installed.\n")
+  }else{
+     install.packages(myRPackage, dep=TRUE, quiet = TRUE)
+  }
+}
+# installPackages("GGally")
+```
+
+# Paquets generals
+
+```{r}
+genPacks<- c("dplyr", "MASS", "ggplot2", "ggpubr")
+out<- sapply(genPacks, installPackages)
+```
+
+
+
+
+# Paquets de classificacio
+
+```{r}
+classifPacks<- c("rpart","ISLR","caret","mlbench","AmesHousing","ipred","rsample","ipred","randomForest","ranger","gbm","xgboost")
+out<- sapply(classifPacks, installPackages)
+```
+
+
+# Paquets per xarxes neuronals
+
+```{r}
+ANNpackages <- c("neuralnet", "keras", "tensorflow", "reticulate", "tfruns")
+out<- sapply(ANNpackages, installPackages)
+keras::install_keras()
+```
+
