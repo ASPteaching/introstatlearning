@@ -1,0 +1,842 @@
+---
+title: "Tree based methods"
+#subtitle: 'From classification and regression trees to ensemble'
+author: "Alex Sanchez, Ferran Reverter and Esteban Vegas"
+institute: "Genetics Microbiology and Statistics Department. University of Barcelona"
+format:
+  revealjs: 
+    incremental: false  
+    # transition: slide
+    # background-transition: fade
+    # transition-speed: slow
+    scrollable: true
+    menu:
+      side: left
+      width: half
+      numbers: true
+    slide-number: c/t
+    show-slide-number: all
+    progress: true
+    css: "css4CU.css"
+    theme: sky
+    embed-resources: true
+#    suppress-bibliography: true
+bibliography: "StatisticalLearning.bib"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Outline {visibility="hidden"}
+
+```{r packages, echo=FALSE}
+if (!require(mlbench)) install.packages("mlbench", dep=TRUE)
+```
+
+1.  Introduction to decision trees
+2.  Data cleaning and preprocessing
+3.  Pruning and optimization
+4.  Classification trees
+5.  Regression trees
+6.  Ensemble methods and advanced topics
+7.  Practical examples and exercises
+8.  Conclusion and future directions
+
+# Introduction to Decision Trees
+
+## Motivation
+
+-   In many real-world applications, decisions need to be made based on complex, multi-dimensional data.
+-   One goal of statistical analysis is to provide insights and guidance to support these decisions.
+-   Decision trees provide a way to organize and summarize information in a way that is easy to understand and use in decision-making.
+
+
+## Examples
+
+-   A bank needs to have a way to decide if/when a customer can be granted a loan.
+
+-   A doctor may need to decide if a patient has to undergo a surgery or a less aggressive treatment.
+
+-   A company may need to decide about investing in new technologies or stay with the traditional ones.
+
+In all those cases a decision tree may provide a structured approach to decision-making that is based on data and can be easily explained and justified.
+
+## An intuitive approach
+
+::: columns
+::: {.column width="40%"}
+Decisions are often based on asking several questions on available information whose answers induce binary splits on data that end up with some grouping or classification.
+:::
+
+::: {.column width="60%"}
+:::{.tiny}
+A doctor might decide to classify patients at high or low cardiovascular risk based on:  systolic blood pressure, age and tachycardia.
+:::
+```{r fig.align='center', out.width="80%"}
+knitr::include_graphics("images/decTree4Hypertension.png")
+```
+:::
+:::
+
+## So, what is a decision tree?
+
+-   A decision tree is a graphical representation of a series of decisions and their potential outcomes.
+
+-   It is obtained by recursively *stratifying* or *segmenting* the *feature space* into a number of simple regions.
+
+-   Each region (decision) corresponds to a *node* in the tree, and each potential outcome corresponds to a *branch*.
+
+-   The tree structure can be used to guide decision-making based on data.
+
+<!-- ## A first look at pros and cons   (CREC QUE NO CAL)(-->
+
+<!-- -   Trees provide an simple approach to classification and prediction for both categorical or numerical outcomes. -->
+
+<!-- -   The results are intuitive and easy to explain and interpret. -->
+
+<!-- -   They are, however, not very accurate, but -->
+
+<!-- -   Aggregation of multiple trees built on the same data can result on dramatic improvements in prediction accuracy, at the expense of some loss of interpretation. -->
+
+## What do we need to learn?
+
+-   We need **context**: 
+
+    -   When is it appropriate to rely on decision trees?
+
+    -   When would other approaches be preferable?
+
+    -   What type of decision trees can be used?
+
+-   We need to know how to **build good trees**
+
+    -   How do we construct a tree?
+    -   How do we optimize the tree?
+    -   How do we evaluate it?
+
+## More about context
+
+-   Decision trees are non parametric, data guided predictors, well suited in many situations such as:
+    -   Non-linear relationships.
+    -   High-dimensional data.
+    -   Interaction effects.
+    -   Non-parametric data.
+    -   Mixed data types.
+-   They are not so appropriate for complex datasets, or complex problems, that require expert knowledge.
+
+## Types of decision trees
+
+- **Classification Trees** are built when the response variable is categorical.
+
+    -   They aim to *classify a new observation* based on the values of the predictor variables.
+
+- **Regression Trees** are used when the response variable is numerical.
+
+    -   They aim to *predict the value* of a continuous response variable based on the values of the predictor variables.
+
+## Classification vs Regression Trees 
+
+:::{.font50}
+
+| **Aspect**            | **Regression Trees**                                  | **Classification Trees**                            |
+|:-----------------|:--------------------------|:--------------------------|
+| Outcome var. type     | Continuous                                            | Categorical                                         |
+| Goal                  | To predict a numerical value                          | To predict a class label                            |
+| Splitting criteria    | Mean Squared Error, Mean Abs. Error                    | Gini Impurity, Entropy, etc.                        |
+| Leaf node prediction  | Mean or median of the target variable in that region  | Mode or majority class of the target variable \...  |
+| Tree visualization    | Sequence of splits leading to a numerical prediction  | Sequence of splits leading to a categorical prediction |
+| Examples of use cases | Predicting housing prices, predicting stock prices    | Predicting customer churn, predicting high/low risk in diease  |
+| Evaluation metric     | Mean Squared Error, Mean Absolute Error, R-square | Accuracy, Precision, Recall, F1-score, etc.         |
+:::
+
+
+## Tree building with R {.smaller}
+
+| **Package** | **Algorithm** | **Dataset size** | **Missing data handling** | **Ensemble methods** | **Visual repr** | **User interface** |
+|-------------|---------------|------------------|---------------------------|----------------------|----------------------------|--------------------|
+| **`rpart`** | RPART         | Medium to large  | Poor                      | No                   | Yes                        | Simple             |
+| **`caret`** | Various       | Various          | Depends on algorithm      | Yes                  | Depends on algorithm       | Complex            |
+| **`tree`**  | CART          | Small to medium  | Poor                      | No                   | Yes                        | Simple             |
+
+\
+
+## A "quick and dirty" example in R
+
+- The Pima Indian Diabetes data set contains 768 individuals (female) and 9 clinical variables.
+
+```{r}
+data("PimaIndiansDiabetes2", package = "mlbench")
+dplyr::glimpse(PimaIndiansDiabetes2)
+# skimr::skim(PimaIndiansDiabetes2)
+```
+
+
+## Predicting Diabetes onset
+
+- We wish to predict the probability of individuals in being diabete-positive or negative.
+
+```{r echo=TRUE}
+library(rpart)
+model1 <- rpart(diabetes ~., data = PimaIndiansDiabetes2)
+```
+
+```{r echo=TRUE, eval=FALSE}
+plot(model1)
+text(model1, digits = 3, cex=0.7)
+```
+
+## A simple, unprunned tree
+
+```{r}
+plot(model1)
+text(model1, digits = 3, cex=0.7)
+```
+
+## How accurate is the model?
+
+```{r echo=TRUE}
+predicted.classes<- predict(model1, PimaIndiansDiabetes2, "class")
+mean(predicted.classes == PimaIndiansDiabetes2$diabetes)
+```
+
+## Always use train/test sets!
+
+-   A better strategy is to use train dataset to build the model and a test dataset to check how it works.
+
+```{r echo=TRUE}
+set.seed(123)
+ssize <- nrow(PimaIndiansDiabetes2)
+propTrain <- 0.8
+training.indices <-sample(1:ssize, floor(ssize*propTrain))
+train.data  <- PimaIndiansDiabetes2[training.indices, ]
+test.data <- PimaIndiansDiabetes2[-training.indices, ]
+```
+
+## Build on train, Estimate on test
+
+-   First, build the model on the train data 
+
+```{r echo=TRUE}
+model2 <- rpart(diabetes ~., data = train.data)
+```
+
+- Then check its accuracy on the test data.
+
+```{r echo=TRUE}
+predicted.classes.test<- predict(model2, test.data, "class")
+mean(predicted.classes.test == test.data$diabetes)
+```
+
+# Constructing Trees
+
+## Building the trees
+
+-   Building the tree requires deciding:
+
+    -   how to partition ("split") the space,
+    -   Which *impurity* measures to use,
+    -   When to stop splitting
+
+-   Evaluation is similar to other classifiers.
+
+-   Optimization involves deciding:
+
+    -   How to *prune* the tree,
+    -   Which features are most important.
+
+
+## Notation and basic concepts
+
+-   $\mathbb X$: Space of variables, or *feature space*
+    -   Usually $\mathbb{X} \subseteq \mathbb{R}^p$
+    -   But it can contain numerical/categorical variables.
+-   $X\in \mathbb{X}$: Input vector: $X_1, X_2, ..., X_p$.
+-   Tree-structured classifiers are constructed by repeated splits of the space X into smaller and smaller subsets, beginning with X itself.
+    -   That is by *recursive splitting*
+
+## Additional notation
+
+-   A node is denoted by $t$. 
+
+    - The left and right child nodes are denoted by $t_{L}$ and  $t_{R}$ respectively.
+
+-   The collection of all nodes in the tree is denoted $T$ 
+
+-   The collection of all the leaf nodes is denoted $\tilde{T}$
+
+-   A split will be denoted by $s$. 
+
+    - The set of all splits is denoted by $S$.
+
+```{=tex}
+\begin{tabular}{|l|l|l|}
+ & & $\mathrm{X}_{7}$ \\
+\cline { 1 - 1 } $\mathrm{X}_{3}$ & \multirow{2}{*}{$\mathrm{X}_{5}$} & $\mathrm{x}_{8}$ \\
+\cline { 1 - 1 } & & \\
+
+\end{tabular}
+```
+
+## Summary of terminology
+
+```{r , fig.align ='center',  out.width="1000", out.height="500", fig.cap="[Quick but good introduction to trees](https://www.youtube.com/watch?v=JcI5E2Ng6r4&t=25s)"}
+knitr::include_graphics("images/1.1-DecisionTrees-Slides_insertimage_1.png")
+```
+
+
+## Trees partition the space
+
+- *The tree represents the recursive splitting of the space*.
+
+  -  Every node of interest corresponds to one region in the original space.
+  -   Two child nodes occupy two different regions.
+    -   Together, yield same region as that of the parent node.
+
+-   In the end, every leaf node is assigned with a class and a test point is assigned with the class of the leaf node it lands in.
+
+## The tree represents the splitting
+
+::: r-stack
+::: {.fragment .fade-in .absolute top="100" left="250"}
+```{r , fig.align ='center',  out.width="800", out.height="400"}
+knitr::include_graphics("images/splits_nodes_1.png")
+```
+:::
+
+::: {.fragment .fade-in .absolute top="100" left="250"}
+```{r  , fig.align ='center', out.width="800", out.height="400"}
+knitr::include_graphics("images/splits_nodes_2.png")
+```
+:::
+
+::: {.fragment .fade-in .absolute top="100" left="250"}
+```{r  , fig.align ='center', out.width="800", out.height="400"}
+knitr::include_graphics("images/splits_nodes_3.png")
+```
+:::
+:::
+
+-   [Animation](https://youtu.be/1ow2tF9Ezgs)
+
+## Construction of a tree
+
+It involves the following three  elements:
+
+1.  The selection of the splits, i.e., how do we decide which node (region) to split and how to split it?
+
+    -   How to select from the pool of candidate splits?
+    -   What are appropriate *goodness of split* criteria?
+
+2.  If we know how to make splits ('grow' the tree), how do we decide when to declare a node terminal and *stop splitting*?
+
+3. How do we assign each terminal node to a class?
+
+## Which questions to split the tree
+
+-   To build a Tree, questions have to be generated that induce splits based on the value of a single variable.
+
+:::{.font70}
+-   Ordered variable $X_j$:
+
+    -   $\text{Is } X_j \leq c$? for all possible thresholds $c$.
+    -   Restricts the split line to be parallel to the coordinates.
+
+-   Categorical variables, $X_j \in \{1, 2, \ldots, M\}$:
+
+    -   $\text{Is } X_j \in A$? where $A$ is any subset of $\{1, 2, \ldots, M\}$.
+
+-   The pool of candidate splits for all $p$ variables is formed by combining all the generated questions.
+
+:::
+<!-- - Once we have the pool of candidate splits, the next step is to decide which one to use when constructing the decision tree. -->
+
+## Determining Goodness of Split
+
+-   The way we choose the split, is *to measure every split by a 'goodness of split' measure*, which depends on:
+
+    -   the split question as well as
+    -   the node to split.
+
+-   The 'goodness of split' in turn is measured by an *impurity function*.
+
+-   Intuitively, when we split the points we want the region corresponding to each leaf node to be "pure", that is, most points in this region come from the same class, that is, one class dominates.
+
+## Good splits vs bad splits
+
+::: columns
+::: fragment
+::: {.column width="50%"}
+```{r out.width="100%"}
+knitr::include_graphics("images/BadSplit.png")
+```
+
+*Purity* not increased
+:::
+:::
+
+::: fragment
+::: {.column width="50%"}
+```{r out.width="100%"}
+knitr::include_graphics("images/GoodSplit.png")
+```
+
+*Purity* increased
+:::
+:::
+:::
+
+## Measuring homogeneity
+
+- In order to measure homogeneity of splits we introduce 
+  - Impurity functions
+  - Impurity measures
+
+- Used to measure the extent of *purity* for a region containing data points from possibly different classes.
+
+## Impurity functions
+
+::: font80
+Definition: An **impurity function** is a function $\Phi$ defined on the set of all $K$-tuples of numbers $\left(p_{1}, \cdots, p_{K}\right)$ satisfying $p_{j} \geq 0, \quad j=1, \cdots, K, \Sigma_{j} p_{j}=1$ with the properties:
+
+1.  $\Phi$ achieves maximum only for the uniform distribution, that is all the $p_{j}$ are equal.
+2.  $\Phi$ achieves minimum only at the points $(1,0, \ldots, 0)$,$(0,1,0, \ldots, 0)$, $\ldots,(0,0, \ldots, 0,1)$, i.e., when the probability of being in a certain class is 1 and 0 for all the other classes.
+3.  $\Phi$ is a symmetric function of $p_{1}, \cdots, p_{K}$, i.e., if we permute $p_{j}$, $\Phi$ remains constant.
+:::
+
+## Some Impurity Functions
+
+Commonly used impurity functions for classification trees:
+
+1.  **Entropy function**: $\sum_{j=1}^{K} p_{j} \log \frac{1}{p_{j}}=-\sum_{j=1}^{K} p_{j} \log p_{j}$.
+
+If $p_{j}=0$, use the limit $\lim p_{j} \rightarrow \log p_{j}=0$.
+
+2.  **Misclassification rate**: $1-\max _{j} p_{j}$.
+
+3.  **Gini index**: $\sum_{j=1}^{K} p_{j}\left(1-p_{j}\right)=1-\sum_{j=1}^{K} p_{j}^{2}$.
+
+
+## Impurity measures for a split
+
+- Definition: Given an impurity function $\Phi$, define the impurity measure, denoted as $i(t)$, of a node $t$ as:
+
+$$
+i(t)=\phi(p(1 \mid t), p(2 \mid t), \ldots, p(K \mid t))
+$$
+
+- where $p(j \mid t)$ is the estimated posterior probability of class $j$ given a point is in node $t$. 
+
+  - That is, the impurity measure is the impurity function when computed on probabilities associated (conditional) with a node.
+
+## Goodness of a split
+
+- Once we have $i(t)$, we define the goodness of split $s$ for node $t$, denoted by $\Phi(s, t)$ :
+
+$$
+\Phi(s, t)=\Delta i(s, t)=i(t)-p_{R} i\left(t_{R}\right)-p_{L} i\left(t_{L}\right)
+$$
+
+- The best split for the single variable $X_{j}$ is the one that has the largest value of $\Phi(s, t)$ over all $s \in \mathcal{S}_{j}$, the set of possible distinct splits for $X_{j}$.
+
+## Impurity score for a node
+
+- The impurity, $i(t)$,  of a node is based solely on the estimated posterior probabilities of the classes 
+
+  - That is, *it doesn't account for the size of $t$*.
+  
+- This is done by  the *impurity score* of  $t$, defined as $I(t)=i(t)\cdot p(t)$, a *weighted impurity measure* of node $t$ that takes into account:
+
+  - The estimated posterior probabilities of the classes, 
+
+  - The estimated proportion of data that go to node $t$.
+
+## Applications of $I(t)$
+
+- $I(t)$ can be used to:
+  - Define the aggregated impurity of a tree, by adding the impurity scores of all terminal leaves.
+  - Provide a weighted measure of impurity decrease for a split: $\Delta I(s, t)=p(t) \Delta i(s, t)$.
+  - Define a criteria for stop splitting a tree (see below).
+
+
+## Entropy as an impurity measure
+
+- The entropy of a node, $t$, that is split in $n$ child nodes $t_1$, $t_2$, ..., $t_n$, is: 
+
+$$
+H(t)=-\sum_{i=1}^{n} P\left(t_{i}\right) \log _{2} P\left(t_{i}\right)
+$$
+
+## Goodness of split based on entropy
+
+- From here, an information gain (that is impurity decrease)  measure can be introduced.
+
+- Information theoretic approach that compares 
+  - the entropy of the parent node before the split to 
+  - that of a weighted sum of the child nodes after the split where the weights are proportional to the number of observations in each node. 
+
+## Information gain
+
+- For a split $s$ and a set of observations (a node) $t$, information gain is defined as:
+
+$$
+\begin{aligned}
+& IG(t, s)=\text { (original entropy) }-(\text { entropy after the split) } \\
+& IG(t, s)=H(t)-\sum_{i=1}^{n} \frac{\left|t_{i}\right|}{t} H\left(x_{i}\right)
+\end{aligned}
+$$
+
+## Example {.smaller}
+
+::: columns
+::: {.column width="40%"}
+Consider the problem of designing an algorithm to automatically differentiate between apples and pears (class labels) given only their width and height measurements (features).
+:::
+
+::: {.column width="60%"}
+::: font80
+| **Width** | **Height** | **Fruit** |
+|-----------|------------|-----------|
+| 7.1       | 7.3        | Apple     |
+| 7.9       | 7.5        | Apple     |
+| 7.4       | 7.0        | Apple     |
+| 8.2       | 7.3        | Apple     |
+| 7.6       | 6.9        | Apple     |
+| 7.8       | 8.0        | Apple     |
+| 7.0       | 7.5        | Pear      |
+| 7.1       | 7.9        | Pear      |
+| 6.8       | 8.0        | Pear      |
+| 6.6       | 7.7        | Pear      |
+| 7.3       | 8.2        | Pear      |
+| 7.2       | 7.9        | Pear      |
+:::
+:::
+:::
+
+## Example. Entropy Calculation
+
+```{r out.width="100%"}
+knitr::include_graphics("images/Example2-EntropyCalculation.png")
+```
+
+## Example. Information Gain
+
+```{r out.width="100%"}
+knitr::include_graphics("images/Example2-IGCalculation.png")
+```
+
+## When to stop growing
+
+-   Maximizing information gain is one possible criteria to choose among splits.
+
+-   In order to avoid excessive complexity it is usually decided to stop splitting when "information gain does not compensate for increase in complexity".
+
+-   In practice stop splitting if: 
+$$
+    \max _{s \in S} \Delta I(s, t)<\beta
+$$ 
+
+
+$\Delta I$ represents the information gain associated with an optima split $s$ and a node $t$, and $\beta$ is a pre-determined threshold.
+
+
+## Class Assignment Rules (1)
+
+-   The decision tree classifies new data points as follows.
+
+    -   We let a data point pass down the tree and see which leaf node it lands in.
+    -   The class of the leaf node is assigned to the new data point. Basically, all the points that land in the same leaf node will be given the same class. This is similar to k-means or any prototype method.
+
+## Class Assignment Rules (2)
+
+-   A class assignment rule assigns a class $j=1, \cdots, K$ to every terminal (leaf) node $t \in \tilde{T}$.
+-   The class is assigned to node $t . \tilde{T}$ is denoted by $\kappa(t)$, 
+  - E.g., if $\kappa(t)=2$, all the points in node $t$ would be assigned to class 2.
+  
+## Class Assignment Rules (3)
+
+- If we use 0-1 loss, the class assignment rule is very similar to k-means (where we pick the majority class or the class with the maximum posterior probability):
+
+$$
+\kappa(t)=\arg \max _{j} p(j \mid t)
+$$
+
+## Estimating the error rate (1)
+
+-   Let's assume we have built a tree and have the classes assigned for the leaf nodes.
+
+-   Goal: estimate *the classification error rate* for this tree.
+
+-   We need to introduce the resubstitution estimate $r(t)$ for the probability of misclassification, given that a case falls into node $t$. This is:
+
+$$
+r(t)=1-\max _{j} p(j \mid t)=1-p(\kappa(t) \mid t)
+$$
+
+## Estimating the error rate (2)
+
+- Denote $R(t)=r(t) p(t)$, that is the miscclassification error rate weighted by the probability of the node.
+
+- The resubstitution estimation for the overall misclassification rate $R(T)$ of the tree classifier $T$ is:
+
+$$
+R(T)=\sum_{t \in \tilde{T}} R(t)
+$$
+
+## Optimizing the Tree
+
+-   Trees obtained by looking for optimal splits tend to overfit: good for the data in the tree, but generalize badly and tend to fail more in predictions.
+
+-   In order to reduce complexity and overfitting while keeping the tree as good as possible tree pruning may be applied.
+
+-   Essentially pruning works by removing branches that are unlikely to improve the accuracy of the model on new data.
+
+## Pruning methods
+
+-   There are different pruning methods, but the most common one is the *cost-complexity* pruning algorithm, also known as the *weakest link pruning*.
+-   The algorithm works by adding a penalty term to the misclassification rate of the terminal nodes:
+
+$$
+R_\alpha(T) =R(T)+\alpha|T|
+$$ where $\alpha$ is the parameter that controls the trade-off between tree complexity and accuracy.
+
+## Cost complexity pruning
+
+-  Start by building a large tree that overfits the data.
+
+-  Then, use cross-validation to estimate the optimal value of alpha that minimizes the generalization error.
+
+-  Finally, prune the tree by removing the branches that have a smaller improvement in impurity than the penalty term multiplied by alpha.
+
+-  Iterate the process until no more branches can be pruned, or until a minimum tree size is reached.
+
+# Regression Trees
+
+## Regression modelling with trees
+
+- When the response variable is numeric, decision trees are *regression trees*.
+
+- Option of choice for distinct reasons
+
+  - The relation between response and potential explanatory variables is not linear.
+  - Perform automatic variable selection.
+  - Easy to interpret, visualize, explain.
+  - Robust to outliers and can handle missing data
+
+## Regression vs classification trees
+
+- Some differences with classification trees:
+    - Splitting criteria based on mean squared error or mean absolute error.
+    - Leaf node prediction based on  mean/median of the target variable.
+    - Evaluation metrics based on measures of the difference between the predicted and actual values.
+
+## Regression tree example
+
+- The `airquality` dataset from the `datasets` package contains daily air quality measurements
+in New York from May through September of 1973 (153 days).
+- The main variables include:
+  - Ozone: the mean ozone (in parts per billion) ...
+  - Solar.R: the solar radiation (in Langleys) ...
+  - Wind: the average wind speed (in mph) ...
+  - Temp: the maximum daily temperature (ºF) ...
+  
+- Main goal : Predict ozone concentration.
+
+## Non linear relationships! {.smaller}
+
+```{r eval=FALSE, echo=TRUE}
+aq <- datasets::airquality
+color <- adjustcolor("forestgreen", alpha.f = 0.5)
+ps <- function(x, y, ...) {  # custom panel function
+  panel.smooth(x, y, col = color, col.smooth = "black", cex = 0.7, lwd = 2)
+}
+pairs(aq, cex = 0.7, upper.panel = ps, col = color)
+```
+
+```{r echo=FALSE, fig.align='center'}
+aq <- datasets::airquality
+color <- adjustcolor("forestgreen", alpha.f = 0.5)
+ps <- function(x, y, ...) {  # custom panel function
+  panel.smooth(x, y, col = color, col.smooth = "black", 
+               cex = 0.7, lwd = 2)
+}
+pairs(aq, cex = 0.7, upper.panel = ps, col = color)
+
+```
+
+## Building the tree (1): Splitting
+
+- Consider:
+  - all predictors $X_1, \dots, X_n$, and 
+  - all values of cutpoint $s$ for each predictor and 
+- For each predictor find boxes 
+ $R_1, \ldots, R_J$ that minimize the RSS, given by
+<small>
+$$
+\sum_{j=1}^J \sum_{i \in R_j}\left(y_i-\hat{y}_{R_j}\right)^2
+$$
+</small>
+
+where $\hat{y}_{R_j}$ is the mean response for the training observations within the $j$ th box.
+
+## Building the tree (2): Splitting
+
+- To do this, define the pair of half-planes
+<small>
+$$
+R_1(j, s)=\left\{X \mid X_j<s\right\} \text { and } R_2(j, s)=\left\{X \mid X_j \geq s\right\}
+$$
+</small>
+
+and seek the value of $j$ and $s$ that minimize the equation:
+
+<small>
+$$
+\sum_{i: x_i \in R_1(j, s)}\left(y_i-\hat{y}_{R_1}\right)^2+\sum_{i: x_i \in R_2(j, s)}\left(y_i-\hat{y}_{R_2}\right)^2.
+$$
+</small>
+
+## Building the tree (3): Prediction{.smaller}
+
+:::: {.columns}
+
+::: {.column width='40%'}
+
+- Once the regions have been created we predict the response using the mean of the trainig observations *in the region to which that observation belongs*.
+
+- In the example, for an observation belonging to the shaded region, the prediction would be:
+
+$$
+\hat (y) =\frac{1}{4}(y_2+y_3+y_5+y_9)
+$$
+:::
+
+::: {.column width='60%'}
+
+```{r fig.align='center', out.width="100%"}
+knitr::include_graphics("images/RegressionTree-Prediction1.png")
+```
+:::
+
+::::
+
+
+## Example: A regression tree  
+
+```{r echo=TRUE}
+set.seed(123)
+train <- sample(1:nrow(aq), size = nrow(aq)*0.7)
+aq_train <- aq[train,]
+aq_test  <- aq[-train,]
+aq_regresion <- tree::tree(formula = Ozone ~ ., 
+                           data = aq_train, split = "deviance")
+summary(aq_regresion)
+```
+
+## Example: Plot the tree
+
+```{r}
+par(mar = c(1,1,1,1))
+plot(x = aq_regresion, type = "proportional")
+text(x = aq_regresion, splits = TRUE, pretty = 0, cex = 0.8, col = "firebrick")
+```
+
+
+## Prunning the tree (1)
+
+- As before, *cost-complexity prunning* can be applied 
+- We consider a sequence of trees indexed by a nonnegative tuning parampter $\alpha$. 
+- For each value of $\alpha$ there corresponds a subtree $T \subset T_0$ such that:
+<small>
+\begin{equation}\label{prunning}
+\sum_{m=1}^{|T|} \sum_{i:}\left(y_i \in R_m-\hat{y}_{R_m}\right)^2+\alpha|T|\quad (*)
+\end{equation}
+</small>
+
+is as small as possible.
+
+## Tuning parameter $\alpha$
+
+-  $\alpha$ controls a trade-off between the subtree’s complexity and its fit to the training data. 
+  - When $\alpha=0$, then the subtree $T$
+will simply equal $T_0$.
+  - As $\alpha$ increases, there is a price to pay for having a tree with many terminal nodes, and so (*) will tend to be minimized for a smaller subtree. 
+  - Equation (*1)  is reminiscent of the lasso.
+- $\alpha$ can be chosen by cross-validation
+.
+
+## Optimizing the tree ($\alpha$){.smaller}
+
+1. Use recursive binary splitting to grow a large tree on the training data, stopping only when each terminal node has fewer than some minimum number of observations.
+
+2. Apply cost complexity pruning to the large tree in order to obtain a sequence of best subtrees, as a function of $\alpha$.
+
+3. Use K-fold cross-validation to choose $\alpha$. That is, divide the training observations into $K$ folds. For each $k=1, \ldots, K$ :
+    1. Repeat Steps 1 and 2 on all but the $k$ th fold of the training data.
+    2. Evaluate the mean squared prediction error on the data in the left-out $k$ th fold, as a function of $\alpha$.
+    
+  Average the results for each value of $\alpha$. Pick $\alpha$ to minimize the average error.
+
+4. Return the subtree from Step 2 that corresponds to the chosen value of $\alpha$.
+
+## Example: Prune the tree
+
+```{r echo=TRUE, warning=TRUE}
+cv_aq <- tree::cv.tree(aq_regresion, K = 5)
+optimal_size <-  rev(cv_aq$size)[which.min(rev(cv_aq$dev))]
+aq_final_tree <- tree::prune.tree(
+                 tree = aq_regresion,
+                 best = optimal_size
+               )
+summary(aq_final_tree)
+```
+
+In this example pruning does not improve the tree.
+
+# Advantages and disadvantages of trees
+
+## Trees have many advantages
+
+- Trees are very easy to explain to people. 
+
+- Decision trees may be seen as good mirrors of human decision-making.
+
+- Trees can be displayed graphically, and are easily interpreted even by a non-expert.
+
+- Trees can easily handle qualitative predictors without the need to create dummy variables.
+
+## But they come at a price
+
+- Trees generally do not have the same level of predictive accuracy as sorne of the other regression and classification approaches.
+
+-  Additionally, trees can be very non-robust: a small change in the data can cause a large change in the final estimated tree.
+
+
+# References and Resources
+
+## References{.smaller}
+
+-   [A. Criminisi, J. Shotton and E. Konukoglu (2011) Decision Forests for Classifcation, Regression ... Microsoft Research technical report TR-2011-114](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/decisionForests_MSR_TR_2011_114.pdf)
+
+-   Efron, B., Hastie T. (2016) Computer Age Statistical Inference. Cambridge University Press. [Web site](https://hastie.su.domains/CASI/index.html)
+
+-   Hastie, T., Tibshirani, R., & Friedman, J. (2009). The elements of statistical learning: Data mining, inference, and prediction. Springer.
+
+-   James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to statistical learning (Vol. 112). Springer. [Web site](https://www.statlearning.com/)
+
+## Complementary references
+
+-   Breiman, L., Friedman, J., Stone, C. J., & Olshen, R. A. (1984). Classification and regression trees. CRC press.
+
+-   Brandon M. Greenwell (202) Tree-Based Methods for Statistical Learning in R. 1st Edition. Chapman and Hall/CRC DOI: https://doi.org/10.1201/9781003089032
+
+-   Genuer R., Poggi, J.M. (2020) Random Forests with R. Springer ed. (UseR!)
+
+
+## Resources
+
+-   [Applied Data Mining and Statistical Learning (Penn Statte-University)](https://online.stat.psu.edu/stat508/)
+
+-   [R for statistical learning](https://daviddalpiaz.github.io/r4sl/)
+
+-   [CART Model: Decision Tree Essentials](http://www.sthda.com/english/articles/35-statistical-machine-learning-essentials/141-cart-model-decision-tree-essentials/#example-of-data-set)
+
+-   [An Introduction to Recursive Partitioning Using the RPART Routines](https://cran.r-project.org/web/packages/rpart/vignettes/longintro.pdf)
